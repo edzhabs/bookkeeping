@@ -23,3 +23,4 @@ seed:
 
 # if blocked
 # run on cli direnv allow .
+#  migrate -path ./cmd/migrate/migrations -database postgres://admin:adminpassword@localhost/bookkeeping?sslmode=disable up
