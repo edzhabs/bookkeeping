@@ -7,6 +7,8 @@ import (
 	"github.com/edzhabs/bookkeeping/internal/env"
 	"github.com/edzhabs/bookkeeping/internal/ratelimiter"
 	"github.com/edzhabs/bookkeeping/internal/store"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 )
 
@@ -17,6 +19,10 @@ func main() {
 	logger := zap.Must(zap.NewProduction()).Sugar()
 	defer logger.Sync()
 
+	if err := godotenv.Load(); err != nil {
+		logger.Fatal("Error loading .env, err:", err)
+	}
+
 	cfg := config{
 		addr: env.GetString("ADDR", ":8080"),
 		env:  env.GetString("ENV", "development"),
@@ -26,7 +32,7 @@ func main() {
 			Enabled:             env.GetBool("RATE_LIMITER_ENABLED", true),
 		},
 		db: dbConfig{
-			addr:         env.GetString("DB_ADDR", ""),
+			addr:         env.GetString("DB_ADDR", "postgres://admin:adminpassword@localhost/bookkeeping?sslmode=disable"),
 			maxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 			maxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
@@ -44,6 +50,7 @@ func main() {
 		logger.Fatal(err)
 	}
 
+	defer db.Close()
 	logger.Info("database connection pool established")
 
 	// ratelimiter

@@ -65,7 +65,11 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	r.Route("/api", func(r chi.Router) {
-		r.Get("/heath", app.healthCheckHandler)
+		r.Get("/health", app.healthCheckHandler)
+
+		r.Route("/students", func(r chi.Router) {
+			r.Post("/", app.createStudentHandler)
+		})
 	})
 
 	return r
