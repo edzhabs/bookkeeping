@@ -98,8 +98,6 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 		WHERE
 			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
 			deleted_at IS NULL
-		LIMIT $2
-		OFFSET $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
@@ -109,8 +107,6 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 		ctx,
 		query,
 		fq.Search,
-		fq.Limit,
-		fq.Offset,
 	)
 	if err != nil {
 		return nil, err
