@@ -1,13 +1,16 @@
 import { LayoutDashboardIcon, UsersIcon, ListIcon } from "lucide-react";
 
+export const DASHBOARD = "Dashboard";
+export const STUDENTS = "Students";
+
 export const SIDEMENU = [
   {
-    title: "Dashboard",
+    title: DASHBOARD,
     url: "/dashboard",
     icon: LayoutDashboardIcon,
   },
   {
-    title: "Students",
+    title: STUDENTS,
     url: "/students",
     icon: UsersIcon,
   },

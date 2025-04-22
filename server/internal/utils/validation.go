@@ -13,7 +13,7 @@ var Validate *validator.Validate
 func init() {
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 	Validate.RegisterValidation("trimmedSpace", trimmedSpace)
-	Validate.RegisterValidation("birthday", validBirthday)
+	Validate.RegisterValidation("validBirthdate", validBirthdate)
 	Validate.RegisterValidation("alpha_with_spaces", validateAlphaWithSpaces)
 }
 
@@ -29,7 +29,7 @@ func validateAlphaWithSpaces(fl validator.FieldLevel) bool {
 	return re.MatchString(fl.Field().String())
 }
 
-func validBirthday(fl validator.FieldLevel) bool {
+func validBirthdate(fl validator.FieldLevel) bool {
 	// Define the expected layout for the birthday string (e.g., "2006-01-02" format)
 	layout := "2006-01-02"
 

@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export interface DataTablePaginationProps<TData> {
+interface DataTablePaginationProps<TData> {
   table: Table<TData>;
 }
 
@@ -23,7 +23,11 @@ export function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
   return (
-    <div className="flex items-center justify-end px-2 py-3">
+    <div className="flex items-center justify-between py-2 pl-2">
+      <div className="flex-1 text-sm text-muted-foreground">
+        Total of {table.getFilteredRowModel().rows.length}{" "}
+        {table.getFilteredRowModel().rows.length <= 1 ? "item" : "items"}
+      </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Rows per page</p>

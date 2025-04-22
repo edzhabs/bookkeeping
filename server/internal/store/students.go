@@ -15,7 +15,7 @@ type Student struct {
 	LastName         string    `json:"last_name"`
 	Suffix           string    `json:"suffix"`
 	Gender           string    `json:"gender"`
-	Birthday         time.Time `json:"birthday"`
+	Birthdate        time.Time `json:"birthdate"`
 	Address          string    `json:"address"`
 	MotherName       string    `json:"mother_name"`
 	MotherOccupation string    `json:"mother_occupation"`
@@ -30,6 +30,11 @@ type Student struct {
 	DeletedAt        time.Time `json:"deleted_at"`
 }
 
+type StudentWithAge struct {
+	Student
+	Age int
+}
+
 type StudentStore struct {
 	db *sql.DB
 }
@@ -37,7 +42,7 @@ type StudentStore struct {
 func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 	query := `
 		INSERT INTO students 
-			(first_name, middle_name, last_name, suffix, gender, birthday, address,
+			(first_name, middle_name, last_name, suffix, gender, birthdate, address,
 			mother_name, mother_occupation, mother_education_attain,
 			father_name, father_occupation, father_education_attain, 
 			contact_numbers, living_with)
@@ -56,7 +61,7 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 		student.LastName,
 		student.Suffix,
 		student.Gender,
-		student.Birthday,
+		student.Birthdate,
 		student.Address,
 		student.MotherName,
 		student.MotherOccupation,
@@ -81,4 +86,64 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 	}
 
 	return nil
+}
+
+func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]StudentWithAge, error) {
+	query := `
+		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, 
+			EXTRACT(YEAR FROM age(birthdate)) AS age, address, mother_name, mother_occupation,
+			mother_education_attain, father_name, father_occupation, father_education_attain,
+			contact_numbers, living_with, created_at
+		FROM students
+		WHERE
+			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
+			deleted_at IS NULL
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(
+		ctx,
+		query,
+		fq.Search,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var students []StudentWithAge
+
+	for rows.Next() {
+		var student StudentWithAge
+		err := rows.Scan(
+			&student.ID,
+			&student.FirstName,
+			&student.MiddleName,
+			&student.LastName,
+			&student.Suffix,
+			&student.Gender,
+			&student.Birthdate,
+			&student.Age,
+			&student.Address,
+			&student.MotherName,
+			&student.MotherOccupation,
+			&student.MotherEducAttain,
+			&student.FatherName,
+			&student.FatherOccupation,
+			&student.FatherEducAttain,
+			pq.Array(&student.ContactNumbers),
+			&student.LivingWith,
+			&student.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		students = append(students, student)
+	}
+
+	return students, nil
 }

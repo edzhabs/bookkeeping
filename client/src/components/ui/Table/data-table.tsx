@@ -1,17 +1,7 @@
-import * as React from "react";
-
 import {
   ColumnDef,
-  ColumnFiltersState,
-  RowData,
-  SortingState,
-  VisibilityState,
   flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
+  Table as ReactTable,
 } from "@tanstack/react-table";
 
 import {
@@ -22,56 +12,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { DataTableViewOptions } from "./column-options";
 import { DataTablePagination } from "./pagination";
-import { FilterHeader } from "./filter-header";
-
-declare module "@tanstack/react-table" {
-  //allows us to define custom properties for our columns
-  interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: "text" | "range" | "select";
-  }
-}
 
 interface DataTableProps<TData, TValue> {
+  table: ReactTable<TData>;
   columns: ColumnDef<TData, TValue>[];
-  data: TData[];
+  isLoading: boolean;
+  isError: boolean;
+  setSelected: (item: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
+  table,
   columns,
-  data,
+  isLoading,
+  isError,
+  setSelected,
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    []
-  );
-  const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({});
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-    },
-  });
+  // TODO: loading and error
+  if (isLoading) return <p>Loading..</p>;
+  if (isError) return <p>Something went wrong</p>;
 
   return (
     <div>
-      <div className="flex items-center pb-2">
-        {/* Visibility */}
-        <DataTableViewOptions table={table} />
-      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -86,14 +49,6 @@ export function DataTable<TData, TValue>({
                             header.column.columnDef.header,
                             header.getContext()
                           )}
-                          {header.column.getCanFilter() ? (
-                            <div>
-                              <FilterHeader
-                                column={header.column}
-                                table={table}
-                              />
-                            </div>
-                          ) : null}
                         </div>
                       )}
                     </TableHead>
@@ -105,7 +60,13 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="cursor-pointer">
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelected(row.original);
+                  }}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
