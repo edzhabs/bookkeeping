@@ -54,16 +54,14 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 
 	// TODO: auth to add user log to know who created this
 
-	student := &store.ExtendedStudent{
-		Student: store.Student{
-			FirstName:  strings.ToUpper(payload.FirstName),
-			MiddleName: strings.ToUpper(payload.MiddleName),
-			LastName:   strings.ToUpper(payload.LastName),
-			Suffix:     payload.Suffix,
-			Gender:     strings.ToLower(payload.Gender),
-			Birthdate:  birthdate,
-			Address:    payload.Address,
-		},
+	student := &store.Student{
+		FirstName:        strings.ToUpper(payload.FirstName),
+		MiddleName:       strings.ToUpper(payload.MiddleName),
+		LastName:         strings.ToUpper(payload.LastName),
+		Suffix:           payload.Suffix,
+		Gender:           strings.ToLower(payload.Gender),
+		Birthdate:        birthdate,
+		Address:          payload.Address,
 		MotherName:       payload.MotherName,
 		MotherOccupation: payload.MotherOccupation,
 		MotherEducAttain: payload.MotherEducAttain,
@@ -91,7 +89,23 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) getStudentsHandler(w http.ResponseWriter, r *http.Request) {
-	students, err := app.store.Students.GetAll(r.Context())
+	fq := store.PaginatedQuery{
+		Limit:  10,
+		Offset: 0,
+	}
+
+	fq, err := fq.Parse(r)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := utils.Validate.Struct(fq); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	students, err := app.store.Students.GetAll(r.Context(), fq)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return

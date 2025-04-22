@@ -59,7 +59,7 @@ func main() {
 		cfg.rateLimiter.TimeFrame,
 	)
 
-	store := store.New(db)
+	store := store.NewStorage(db)
 
 	app := &application{
 		config:      cfg,

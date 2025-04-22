@@ -9,19 +9,14 @@ import (
 )
 
 type Student struct {
-	ID         int64     `json:"id"`
-	FirstName  string    `json:"first_name"`
-	MiddleName string    `json:"middle_name"`
-	LastName   string    `json:"last_name"`
-	Suffix     string    `json:"suffix"`
-	Gender     string    `json:"gender"`
-	Birthdate  time.Time `json:"birthdate"`
-	Address    string    `json:"address"`
-}
-
-type ExtendedStudent struct {
-	Student
-	Age              int       `json:"age"`
+	ID               int64     `json:"id"`
+	FirstName        string    `json:"first_name"`
+	MiddleName       string    `json:"middle_name"`
+	LastName         string    `json:"last_name"`
+	Suffix           string    `json:"suffix"`
+	Gender           string    `json:"gender"`
+	Birthdate        time.Time `json:"birthdate"`
+	Address          string    `json:"address"`
 	MotherName       string    `json:"mother_name"`
 	MotherOccupation string    `json:"mother_occupation"`
 	MotherEducAttain string    `json:"mother_education_attain"`
@@ -35,11 +30,16 @@ type ExtendedStudent struct {
 	DeletedAt        time.Time `json:"deleted_at"`
 }
 
+type StudentWithAge struct {
+	Student
+	Age int
+}
+
 type StudentStore struct {
 	db *sql.DB
 }
 
-func (s *StudentStore) Create(ctx context.Context, student *ExtendedStudent) error {
+func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 	query := `
 		INSERT INTO students 
 			(first_name, middle_name, last_name, suffix, gender, birthdate, address,
@@ -88,71 +88,40 @@ func (s *StudentStore) Create(ctx context.Context, student *ExtendedStudent) err
 	return nil
 }
 
-func (s *StudentStore) GetAll(ctx context.Context) ([]Student, error) {
-	query := `
-		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, address
-		FROM students
-		WHERE deleted_at IS NULL
-	`
-
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
-	defer cancel()
-
-	rows, err := s.db.QueryContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	defer rows.Close()
-
-	var students []Student
-
-	for rows.Next() {
-		var student Student
-		err := rows.Scan(
-			&student.ID,
-			&student.FirstName,
-			&student.MiddleName,
-			&student.LastName,
-			&student.Suffix,
-			&student.Gender,
-			&student.Birthdate,
-			&student.Address,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		students = append(students, student)
-	}
-
-	return students, nil
-}
-
-func (s *StudentStore) GetByID(ctx context.Context) ([]ExtendedStudent, error) {
+func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]StudentWithAge, error) {
 	query := `
 		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, 
 			EXTRACT(YEAR FROM age(birthdate)) AS age, address, mother_name, mother_occupation,
 			mother_education_attain, father_name, father_occupation, father_education_attain,
 			contact_numbers, living_with, created_at
 		FROM students
-		WHERE deleted_at IS NULL
+		WHERE
+			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
+			deleted_at IS NULL
+		LIMIT $2
+		OFFSET $3
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query)
+	rows, err := s.db.QueryContext(
+		ctx,
+		query,
+		fq.Search,
+		fq.Limit,
+		fq.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	defer rows.Close()
 
-	var students []ExtendedStudent
+	var students []StudentWithAge
 
 	for rows.Next() {
-		var student ExtendedStudent
+		var student StudentWithAge
 		err := rows.Scan(
 			&student.ID,
 			&student.FirstName,
