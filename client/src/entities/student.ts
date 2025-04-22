@@ -1,12 +1,10 @@
-import Enrollment from "./enrollment";
-import Guardian from "./guardian";
-
 export default interface Student {
   id: number;
-  firstName: string;
-  lastName: string;
-  fullName: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  suffix: string;
+  gender: "male" | "female";
+  birthdate: string;
   address: string;
-  guardians: Guardian[];
-  enrollments: Enrollment[];
 }

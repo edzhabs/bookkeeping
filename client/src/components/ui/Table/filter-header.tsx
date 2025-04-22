@@ -1,58 +1,79 @@
-import { DebouncedInput } from "@/components/DebouncedInput";
+import { useState } from "react";
 import { Column } from "@tanstack/react-table";
+import { Check, Filter, X } from "lucide-react";
 
-export function FilterHeader<TData, TValue>({
-  column,
-}: {
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+
+interface DataTableColumnFilterProps<TData, TValue>
+  extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
-}) {
-  const columnFilterValue = column.getFilterValue();
-  const { filterVariant } = column.columnDef.meta ?? {};
+  title: string;
+  options: string[]; // e.g., ['Male', 'Female']
+}
 
-  return filterVariant === "range" ? (
-    <div>
-      <div className="flex space-x-2">
-        {/* See faceted column filters example for min max values functionality */}
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[0] ?? ""}
-          onChange={(value) =>
-            column.setFilterValue((old: [number, number]) => [value, old?.[1]])
-          }
-          placeholder={`Min`}
-          className="w-24 border shadow rounded"
-        />
-        <DebouncedInput
-          type="number"
-          value={(columnFilterValue as [number, number])?.[1] ?? ""}
-          onChange={(value) =>
-            column.setFilterValue((old: [number, number]) => [old?.[0], value])
-          }
-          placeholder={`Max`}
-          className="w-24 border shadow rounded"
-        />
-      </div>
-      <div className="h-1" />
+export function DataTableColumnFilter<TData, TValue>({
+  column,
+  title,
+  options,
+  className,
+}: DataTableColumnFilterProps<TData, TValue>) {
+  const [selected, setSelected] = useState<string[]>([]);
+
+  const toggleOption = (option: string) => {
+    const newSelected = selected.includes(option)
+      ? selected.filter((v) => v !== option)
+      : [...selected, option];
+
+    setSelected(newSelected);
+    column.setFilterValue(newSelected.length ? newSelected : undefined);
+  };
+
+  const clear = () => {
+    setSelected([]);
+    column.setFilterValue(undefined);
+  };
+
+  return (
+    <div className={cn("flex items-center space-x-2", className)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-3 h-8 data-[state=open]:bg-accent"
+          >
+            <span>{title}</span>
+            <Filter className="ml-2 h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          {options.map((option) => (
+            <DropdownMenuItem
+              key={option}
+              onClick={() => toggleOption(option)}
+              className="flex items-center justify-between"
+            >
+              {option}
+              {selected.includes(option) && (
+                <Check className="h-4 w-4 text-green-500" />
+              )}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={clear}>
+            <X className="h-4 w-4 text-muted-foreground/70 mr-2" />
+            Clear Filters
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
-  ) : filterVariant === "select" ? (
-    <select
-      onChange={(e) => column.setFilterValue(e.target.value)}
-      value={columnFilterValue?.toString()}
-    >
-      {/* See faceted column filters example for dynamic select options */}
-      <option value="">All</option>
-      <option value="complicated">complicated</option>
-      <option value="relationship">relationship</option>
-      <option value="single">single</option>
-    </select>
-  ) : (
-    <DebouncedInput
-      className="w-36 border shadow rounded"
-      onChange={(value) => column.setFilterValue(value)}
-      placeholder={`Search...`}
-      type="text"
-      value={(columnFilterValue ?? "") as string}
-    />
-    // See faceted column filters example for datalist search suggestions
   );
 }

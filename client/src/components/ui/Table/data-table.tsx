@@ -3,7 +3,6 @@ import * as React from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
-  RowData,
   SortingState,
   VisibilityState,
   flexRender,
@@ -24,23 +23,23 @@ import {
 } from "@/components/ui/table";
 import { DataTableViewOptions } from "./column-options";
 import { DataTablePagination } from "./pagination";
-import { FilterHeader } from "./filter-header";
 
 declare module "@tanstack/react-table" {
   //allows us to define custom properties for our columns
-  interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: "text" | "range" | "select";
-  }
 }
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
+  isLoading: boolean;
+  isError: boolean;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  isLoading,
+  isError,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -66,6 +65,10 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // TODO: loading and error
+  if (isLoading) return <p>Loading..</p>;
+  if (isError) return <p>Something went wrong</p>;
+
   return (
     <div>
       <div className="flex items-center pb-2">
@@ -86,14 +89,6 @@ export function DataTable<TData, TValue>({
                             header.column.columnDef.header,
                             header.getContext()
                           )}
-                          {header.column.getCanFilter() ? (
-                            <div>
-                              <FilterHeader
-                                column={header.column}
-                                table={table}
-                              />
-                            </div>
-                          ) : null}
                         </div>
                       )}
                     </TableHead>

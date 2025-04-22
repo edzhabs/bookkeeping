@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS students(
     last_name VARCHAR(100) NOT NULL,
     suffix VARCHAR(10) DEFAULT NULL,
     gender VARCHAR(10) CHECK (gender IN ('male', 'female')),
-    birthday DATE NOT NULL,
+    birthdate DATE NOT NULL,
     address TEXT NOT NULL,
     mother_name VARCHAR(255) DEFAULT NULL,
     mother_occupation VARCHAR(100) DEFAULT NULL,
@@ -22,6 +22,6 @@ CREATE TABLE IF NOT EXISTS students(
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_student_name_birthday_gender
 ON students (
-    UPPER(first_name), UPPER(middle_name), UPPER(last_name), birthday, LOWER(gender), COALESCE(suffix, '')
+    UPPER(first_name), UPPER(middle_name), UPPER(last_name), birthdate, LOWER(gender), COALESCE(suffix, '')
     )
 WHERE deleted_at IS NULL;

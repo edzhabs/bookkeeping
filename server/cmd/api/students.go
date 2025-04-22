@@ -22,7 +22,7 @@ type CreateStudentPayload struct {
 	LastName         string   `json:"last_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
 	Suffix           string   `json:"suffix" validate:"omitempty,alpha_with_spaces,max=10"`
 	Gender           string   `json:"gender" validate:"oneofci=male female"`
-	Birthday         string   `json:"birthday" validate:"required,birthday"`
+	Birthdate        string   `json:"birthdate" validate:"required,validBirthdate"`
 	Address          string   `json:"address" validate:"required,max=100"`
 	MotherName       string   `json:"mother_name" validate:"omitempty,alpha_with_spaces,trimmedSpace,max=100"`
 	MotherOccupation string   `json:"mother_occupation" validate:"omitempty,max=100"`
@@ -46,7 +46,7 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	bday, err := time.Parse(dateLayout, payload.Birthday)
+	birthdate, err := time.Parse(dateLayout, payload.Birthdate)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
@@ -54,14 +54,16 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 
 	// TODO: auth to add user log to know who created this
 
-	student := &store.Student{
-		FirstName:        strings.ToUpper(payload.FirstName),
-		MiddleName:       strings.ToUpper(payload.MiddleName),
-		LastName:         strings.ToUpper(payload.LastName),
-		Suffix:           payload.Suffix,
-		Gender:           strings.ToLower(payload.Gender),
-		Birthday:         bday,
-		Address:          payload.Address,
+	student := &store.ExtendedStudent{
+		Student: store.Student{
+			FirstName:  strings.ToUpper(payload.FirstName),
+			MiddleName: strings.ToUpper(payload.MiddleName),
+			LastName:   strings.ToUpper(payload.LastName),
+			Suffix:     payload.Suffix,
+			Gender:     strings.ToLower(payload.Gender),
+			Birthdate:  birthdate,
+			Address:    payload.Address,
+		},
 		MotherName:       payload.MotherName,
 		MotherOccupation: payload.MotherOccupation,
 		MotherEducAttain: payload.MotherEducAttain,
@@ -83,6 +85,19 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err := utils.ResponseJSON(w, http.StatusCreated, student); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) getStudentsHandler(w http.ResponseWriter, r *http.Request) {
+	students, err := app.store.Students.GetAll(r.Context())
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := utils.ResponseJSON(w, http.StatusOK, students); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

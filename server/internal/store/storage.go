@@ -16,7 +16,9 @@ var (
 
 type Storage struct {
 	Students interface {
-		Create(ctx context.Context, student *Student) error
+		Create(ctx context.Context, student *ExtendedStudent) error
+		GetAll(ctx context.Context) ([]Student, error)
+		GetByID(ctx context.Context) ([]ExtendedStudent, error)
 	}
 }
 
