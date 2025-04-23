@@ -17,7 +17,7 @@ var (
 type Storage struct {
 	Students interface {
 		Create(ctx context.Context, student *Student) error
-		GetAll(ctx context.Context, fq PaginatedQuery) ([]StudentWithAge, error)
+		GetAll(ctx context.Context) ([]StudentWithAge, error)
 	}
 }
 

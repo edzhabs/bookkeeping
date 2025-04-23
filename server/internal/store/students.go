@@ -88,7 +88,7 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 	return nil
 }
 
-func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]StudentWithAge, error) {
+func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
 	query := `
 		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, 
 			EXTRACT(YEAR FROM age(birthdate)) AS age, address, mother_name, mother_occupation,
@@ -98,6 +98,7 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 		WHERE
 			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
 			deleted_at IS NULL
+		ORDER BY created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
@@ -106,7 +107,6 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 	rows, err := s.db.QueryContext(
 		ctx,
 		query,
-		fq.Search,
 	)
 	if err != nil {
 		return nil, err

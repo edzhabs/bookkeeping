@@ -11,18 +11,21 @@ export const columns: ColumnDef<Student>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Last Name" />
     ),
+    enableGlobalFilter: true,
   },
   {
     accessorKey: "first_name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="First Name" />
     ),
+    enableGlobalFilter: true,
   },
   {
     accessorKey: "middle_name",
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Middle Name" />
     ),
+    enableGlobalFilter: true,
   },
   {
     accessorFn: (row) => `${capitalFirstLetter(row.gender)}`,
