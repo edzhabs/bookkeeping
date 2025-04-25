@@ -1,33 +1,17 @@
-import { columns } from "@/components/Table-Columns/student-column";
+import { DebouncedInput } from "@/components/DebouncedInput";
+import { StudentColumns } from "@/components/Table-Columns/student-column";
+import { DataTableViewOptions } from "@/components/ui/Table/column-options";
 import { DataTable } from "@/components/ui/Table/data-table";
 import Student from "@/entities/student";
-import { useQuery } from "@tanstack/react-query";
+import useStudents from "@/hooks/useStudents";
+import useTable from "@/hooks/useTable";
 import { useState } from "react";
 import StudentDetailPage from "./StudentDetailPage";
-import { DebouncedInput } from "@/components/DebouncedInput";
-import useTable from "@/hooks/use-table";
-import { DataTableViewOptions } from "@/components/ui/Table/column-options";
-
-const fetchStudents = async (signal: AbortSignal) => {
-  const url = new URL("http://localhost:8080/api/students");
-  const res = await fetch(url.toString(), { signal });
-  if (!res.ok) throw new Error("response was not ok");
-  return await res.json();
-};
 
 const StudentsPage = () => {
-  const {
-    data: students,
-    isLoading,
-    isError,
-  } = useQuery<{ data: Student[] }>({
-    queryKey: ["students"],
-    queryFn: async ({ signal }) => fetchStudents(signal),
-    staleTime: 60 * 1000, // 1min
-    retry: 3,
-  });
+  const { data: students, isLoading, isError } = useStudents();
 
-  const { table, setGlobalFilter } = useTable(columns, students?.data);
+  const { table, setGlobalFilter } = useTable(StudentColumns, students?.data);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>();
 
   if (selectedStudent)
@@ -53,7 +37,7 @@ const StudentsPage = () => {
 
       <DataTable
         table={table}
-        columns={columns}
+        columns={StudentColumns}
         setSelected={setSelectedStudent}
         isLoading={isLoading}
         isError={isError}

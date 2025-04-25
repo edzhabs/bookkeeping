@@ -3,8 +3,9 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTableColumnHeader } from "../ui/Table/column-header";
 import { capitalFirstLetter } from "@/utils";
 import { DataTableColumnFilter } from "../ui/Table/filter-header";
+import CONSTANTS from "@/constants/constants";
 
-export const columns: ColumnDef<Student>[] = [
+export const StudentColumns: ColumnDef<Student>[] = [
   {
     accessorFn: (row) => `${row.last_name}${row.suffix && ","} ${row.suffix}`,
     id: "lastName",
@@ -34,7 +35,7 @@ export const columns: ColumnDef<Student>[] = [
       <DataTableColumnFilter
         column={column}
         title="Gender"
-        options={["Male", "Female"]}
+        options={CONSTANTS.GENDER}
       />
     ),
     filterFn: (row, id, value) => {

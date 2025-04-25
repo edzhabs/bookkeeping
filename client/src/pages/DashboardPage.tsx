@@ -1,5 +1,9 @@
 const DashboardPage = () => {
-  return <div className="bg-amber-900">Dashboard</div>;
+  return (
+    <div>
+      <h1>Welcome, User1</h1>
+    </div>
+  );
 };
 
 export default DashboardPage;
