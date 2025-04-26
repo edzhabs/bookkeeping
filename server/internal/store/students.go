@@ -14,6 +14,7 @@ type Student struct {
 	MiddleName       string    `json:"middle_name"`
 	LastName         string    `json:"last_name"`
 	Suffix           string    `json:"suffix"`
+	FullName         string    `json:"full_name"`
 	Gender           string    `json:"gender"`
 	Birthdate        time.Time `json:"birthdate"`
 	Address          string    `json:"address"`
@@ -89,14 +90,29 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 }
 
 func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
+	// query := `
+	// 	SELECT id, first_name, middle_name, last_name, suffix,
+	// 		CONCAT_WS(' ', first_name, middle_name, last_name) AS full_name,
+	// 		gender, birthdate, EXTRACT(YEAR FROM age(birthdate)) AS age,
+	// 		address, mother_name, mother_occupation,
+	// 		mother_education_attain, father_name, father_occupation, father_education_attain,
+	// 		contact_numbers, living_with, created_at
+	// 	FROM students
+	// 	WHERE
+	// 		(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
+	// 		deleted_at IS NULL
+	// 	ORDER BY created_at DESC
+	// `
+
 	query := `
-		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, 
-			EXTRACT(YEAR FROM age(birthdate)) AS age, address, mother_name, mother_occupation,
+		SELECT id, first_name, middle_name, last_name, suffix, 
+			CONCAT_WS(' ', first_name, middle_name, last_name) AS full_name,
+			gender, birthdate, EXTRACT(YEAR FROM age(birthdate)) AS age,  
+			address, mother_name, mother_occupation,
 			mother_education_attain, father_name, father_occupation, father_education_attain,
 			contact_numbers, living_with, created_at
 		FROM students
 		WHERE
-			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
 			deleted_at IS NULL
 		ORDER BY created_at DESC
 	`
@@ -124,6 +140,7 @@ func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
 			&student.MiddleName,
 			&student.LastName,
 			&student.Suffix,
+			&student.FullName,
 			&student.Gender,
 			&student.Birthdate,
 			&student.Age,

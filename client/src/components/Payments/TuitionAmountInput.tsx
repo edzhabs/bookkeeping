@@ -29,6 +29,7 @@ const AmountInput = <T extends FieldValues>({
         <FormItem>
           <FormLabel
             className={cn(
+              "text-nowrap",
               form.formState.errors.fees ? "text-destructive" : "" // Apply red to label when fees error is present
             )}
           >

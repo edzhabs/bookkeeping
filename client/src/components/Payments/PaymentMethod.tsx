@@ -37,7 +37,7 @@ const PaymentMethod = <T extends FieldValues>({ form }: Props<T>) => {
           <Select onValueChange={field.onChange} defaultValue={field.value}>
             <FormControl>
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder="Select method" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>

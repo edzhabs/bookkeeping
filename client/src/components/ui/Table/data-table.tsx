@@ -19,7 +19,6 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   isLoading: boolean;
   isError: boolean;
-  setSelected: (item: TData) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -27,7 +26,6 @@ export function DataTable<TData, TValue>({
   columns,
   isLoading,
   isError,
-  setSelected,
 }: DataTableProps<TData, TValue>) {
   // TODO: loading and error
   if (isLoading) return <p>Loading..</p>;
@@ -60,13 +58,7 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setSelected(row.original);
-                  }}
-                >
+                <TableRow key={row.id} className="cursor-pointer">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(

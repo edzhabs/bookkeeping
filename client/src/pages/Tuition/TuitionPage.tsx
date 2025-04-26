@@ -1,16 +1,15 @@
 import { DebouncedInput } from "@/components/DebouncedInput";
-import {
-  Tuition,
-  TuitionColumns,
-} from "@/components/Table-Columns/tuition-columns";
+import { TuitionColumns } from "@/components/Table-Columns/tuition-columns";
 import { Button } from "@/components/ui/button";
 import { DataTableViewOptions } from "@/components/ui/Table/column-options";
 import { DataTable } from "@/components/ui/Table/data-table";
+import { NAVTITLE } from "@/constants/side-menu";
+import { HeaderContext } from "@/context/headerContext";
 import useStudents from "@/hooks/useStudents";
 import useTable from "@/hooks/useTable";
-import { PlusCircle, UserPlus, CreditCard } from "lucide-react";
-import { useState } from "react";
-import TuitionPaymentPage from "./TuitionPaymentPage";
+import { CreditCard, PlusCircle, UserPlus } from "lucide-react";
+import { useContext, useEffect } from "react";
+import { Link } from "react-router-dom";
 // Mock data for tuition payments
 const tuitionPayments = [
   {
@@ -92,25 +91,26 @@ const tuitionPayments = [
   },
 ];
 const TuitionPage = () => {
+  const { setHeaderTitle } = useContext(HeaderContext);
+
   const { isError, isLoading } = useStudents();
   const { table, setGlobalFilter } = useTable(TuitionColumns, tuitionPayments);
-  const [selectedTuition, setSelectedTuition] = useState<Tuition | null>();
-  const [showPaymentPage, setShowPaymentPage] = useState(false);
-  if (showPaymentPage) return <TuitionPaymentPage />;
-  console.log(selectedTuition);
+
+  useEffect(() => {
+    setHeaderTitle(NAVTITLE.TUITION.title);
+  }, [setHeaderTitle]);
+
   return (
     <div className="container mx-auto py-2">
       <div className="flex flex-wrap gap-2 w-full pb-4 sm:w-auto">
-        <Button
-          asChild
-          className="flex-1 sm:flex-none cursor-pointer"
-          onClick={() => setShowPaymentPage(true)}
-        >
-          <span>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Pay Tuition
-          </span>
-        </Button>
+        <Link to="/tuition/payment">
+          <Button asChild className="flex-1 sm:flex-none cursor-pointer">
+            <span>
+              <CreditCard className="mr-2 h-4 w-4" />
+              Pay Tuition
+            </span>
+          </Button>
+        </Link>
         <Button
           asChild
           variant="outline"
@@ -146,7 +146,6 @@ const TuitionPage = () => {
       <DataTable
         table={table}
         columns={TuitionColumns}
-        setSelected={setSelectedTuition}
         isLoading={isLoading}
         isError={isError}
       />

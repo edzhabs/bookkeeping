@@ -89,23 +89,23 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 }
 
 func (app *application) getStudentsHandler(w http.ResponseWriter, r *http.Request) {
-	fq := store.PaginatedQuery{
-		Limit:  10,
-		Offset: 0,
-	}
+	// fq := store.PaginatedQuery{
+	// 	Limit:  10,
+	// 	Offset: 0,
+	// }
 
-	fq, err := fq.Parse(r)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+	// fq, err := fq.Parse(r)
+	// if err != nil {
+	// 	app.badRequestResponse(w, r, err)
+	// 	return
+	// }
 
-	if err := utils.Validate.Struct(fq); err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+	// if err := utils.Validate.Struct(fq); err != nil {
+	// 	app.badRequestResponse(w, r, err)
+	// 	return
+	// }
 
-	students, err := app.store.Students.GetAll(r.Context(), fq)
+	students, err := app.store.Students.GetAll(r.Context())
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return

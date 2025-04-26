@@ -4,59 +4,72 @@ import {
   DollarSignIcon,
   FileSpreadsheetIcon,
   LayoutDashboardIcon,
+  LucideIcon,
   PiggyBankIcon,
   ReceiptIcon,
   UsersIcon,
 } from "lucide-react";
 
-export const DASHBOARD = "Dashboard";
-export const STUDENTS = "Students";
-export const TUITION = "Tuition";
-export const CARPOOL = "Carpool";
-export const OTHER_INCOME = "Other Income";
-export const TMPCCI_EXPENSES = "TMPCCI - Expenses";
-export const CARPOOL_EXPENSES = "Carpool - Expenses";
-export const FINANCIAL_REPORTS = "Financial Reports";
+export interface ISideMenu {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+}
+
+export const NAVTITLE = {
+  DASHBOARD: {
+    title: "Dashboard",
+    url: "/dashboard",
+  },
+  STUDENTS: { title: "Students", url: "/students" },
+  TUITION_PAYMENT: { title: "Tuition Payment", url: "/tuition/payment" },
+  TUITION: { title: "Tuition", url: "/tuition" },
+  CARPOOL: { title: "Carpool", url: "/carpool" },
+  OTHER_INCOME: { title: "Other Income", url: "/other_income" },
+  TMPCCI_EXPENSES: { title: "TMPCCI - Expenses", url: "/school_expenses" },
+  CARPOOL_EXPENSES: { title: "Carpool - Expenses", url: "/carpool_expenses" },
+  FINANCIAL_REPORTS: { title: "Financial Reports", url: "/financial_reports" },
+};
 
 export const SIDEMENU = [
   {
-    title: DASHBOARD,
-    url: "/dashboard",
+    title: NAVTITLE.DASHBOARD.title,
+    url: NAVTITLE.DASHBOARD.url,
     icon: LayoutDashboardIcon,
   },
   {
-    title: STUDENTS,
-    url: "/students",
+    title: NAVTITLE.STUDENTS.title,
+    url: NAVTITLE.STUDENTS.url,
     icon: UsersIcon,
   },
   {
-    title: TUITION,
-    url: "/tuition",
+    title: NAVTITLE.TUITION.title,
+    url: NAVTITLE.TUITION.url,
     icon: DollarSignIcon,
   },
   {
-    title: CARPOOL,
-    url: "/carpool",
+    title: NAVTITLE.CARPOOL.title,
+    url: NAVTITLE.CARPOOL.url,
     icon: CarIcon,
   },
   {
-    title: OTHER_INCOME,
-    url: "/other_income",
+    title: NAVTITLE.OTHER_INCOME.title,
+    url: NAVTITLE.OTHER_INCOME.url,
     icon: PiggyBankIcon,
   },
   {
-    title: TMPCCI_EXPENSES,
-    url: "/tmpcci_expenses",
+    title: NAVTITLE.TMPCCI_EXPENSES.title,
+    url: NAVTITLE.TMPCCI_EXPENSES.url,
     icon: ReceiptIcon,
   },
   {
-    title: CARPOOL_EXPENSES,
-    url: "/carpool_expenses",
+    title: NAVTITLE.CARPOOL_EXPENSES.title,
+    url: NAVTITLE.CARPOOL_EXPENSES.url,
     icon: FileSpreadsheetIcon,
   },
   {
-    title: FINANCIAL_REPORTS,
-    url: "/financial_reports",
+    title: NAVTITLE.FINANCIAL_REPORTS.title,
+    url: NAVTITLE.FINANCIAL_REPORTS.url,
     icon: BarChart3Icon,
   },
 ];

@@ -16,7 +16,7 @@ import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { TuitionPaymentSchema } from "@/lib/validation/tuitionSchema";
 
-export default function PaymentForm() {
+export default function TuitionPaymentPage() {
   const [totalAmount, setTotalAmount] = useState<number>(0);
 
   const form = useForm<z.infer<typeof TuitionPaymentSchema>>({

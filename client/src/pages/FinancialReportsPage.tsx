@@ -1,7 +1,7 @@
 import React from "react";
 
-const FinanmcialReportsPage = () => {
+const FinancialReportsPage = () => {
   return <div>FinanmcialReportsPage</div>;
 };
 
-export default FinanmcialReportsPage;
+export default FinancialReportsPage;

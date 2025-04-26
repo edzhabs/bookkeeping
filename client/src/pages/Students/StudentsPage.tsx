@@ -2,25 +2,20 @@ import { DebouncedInput } from "@/components/DebouncedInput";
 import { StudentColumns } from "@/components/Table-Columns/student-column";
 import { DataTableViewOptions } from "@/components/ui/Table/column-options";
 import { DataTable } from "@/components/ui/Table/data-table";
-import Student from "@/entities/student";
+import { NAVTITLE } from "@/constants/side-menu";
+import { HeaderContext } from "@/context/headerContext";
 import useStudents from "@/hooks/useStudents";
 import useTable from "@/hooks/useTable";
-import { useState } from "react";
-import StudentDetailPage from "./StudentDetailPage";
+import { useContext, useEffect } from "react";
 
 const StudentsPage = () => {
+  const { setHeaderTitle } = useContext(HeaderContext);
   const { data: students, isLoading, isError } = useStudents();
-
   const { table, setGlobalFilter } = useTable(StudentColumns, students?.data);
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>();
 
-  if (selectedStudent)
-    return (
-      <StudentDetailPage
-        data={selectedStudent}
-        setSelectedStudent={setSelectedStudent}
-      />
-    );
+  useEffect(() => {
+    setHeaderTitle(NAVTITLE.STUDENTS.title);
+  }, [setHeaderTitle]);
 
   return (
     <div className="container mx-auto py-2">
@@ -38,7 +33,6 @@ const StudentsPage = () => {
       <DataTable
         table={table}
         columns={StudentColumns}
-        setSelected={setSelectedStudent}
         isLoading={isLoading}
         isError={isError}
       />
