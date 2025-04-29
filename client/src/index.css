@@ -115,7 +115,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
@@ -141,5 +141,35 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer components {
+  .container {
+    @apply mx-auto px-4 sm:px-6 lg:px-8 w-full;
+    max-width: 100%;
+  }
+}
+
+@layer utilities {
+  /* Fix for form validation messages to prevent layout shift */
+  .form-item-fixed-height {
+    min-height: 80px;
+  }
+
+  /* Fix for select components to take full width */
+  .select-full-width {
+    width: 100%;
+  }
+
+  /* Add a custom breakpoint for extra small screens */
+  @media (min-width: 480px) {
+    .xs\:inline {
+      display: inline;
+    }
+
+    .xs\:block {
+      display: block;
+    }
   }
 }

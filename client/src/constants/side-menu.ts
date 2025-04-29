@@ -1,9 +1,11 @@
 import {
+  ArchiveIcon,
   BarChart3Icon,
   CarIcon,
   DollarSignIcon,
   FileSpreadsheetIcon,
   LayoutDashboardIcon,
+  LucideFileText,
   LucideIcon,
   PiggyBankIcon,
   ReceiptIcon,
@@ -21,14 +23,24 @@ export const NAVTITLE = {
     title: "Dashboard",
     url: "/dashboard",
   },
-  STUDENTS: { title: "Students", url: "/students" },
-  TUITION_PAYMENT: { title: "Tuition Payment", url: "/tuition/payment" },
-  TUITION: { title: "Tuition", url: "/tuition" },
+  ENROLLMENTS: { title: "Student Enrollment", url: "/enrollment" },
+  ENROLL_STUDENT: { title: "Enroll Student", url: "/enrollment/new" },
+  VIEW_STUDENT_DETAILS: { title: "Student Details", url: "/enrollment/:id" },
+  EDIT_STUDENT_DETAILS: {
+    title: "Edit Student Details",
+    url: "/enrollment/:id/edit",
+  },
+  TUITION: { title: "Tuition", url: "/tuitions" },
+  TUITION_DETAILS: { title: "View Tuition", url: "/tuitions/:id" },
   CARPOOL: { title: "Carpool", url: "/carpool" },
   OTHER_INCOME: { title: "Other Income", url: "/other_income" },
   TMPCCI_EXPENSES: { title: "TMPCCI - Expenses", url: "/school_expenses" },
   CARPOOL_EXPENSES: { title: "Carpool - Expenses", url: "/carpool_expenses" },
   FINANCIAL_REPORTS: { title: "Financial Reports", url: "/financial_reports" },
+  TRANSACTIONS: { title: "Transactions", url: "/transactions" },
+  TRANSACTIONS_DETAILS: { title: "Transactions", url: "/transactions/:id" },
+  ARCHIVE: { title: "Archive", url: "/archive" },
+  ARCHIVE_DETAILS: { title: "Archive", url: "/archive/:id" },
 };
 
 export const SIDEMENU = [
@@ -38,8 +50,8 @@ export const SIDEMENU = [
     icon: LayoutDashboardIcon,
   },
   {
-    title: NAVTITLE.STUDENTS.title,
-    url: NAVTITLE.STUDENTS.url,
+    title: NAVTITLE.ENROLLMENTS.title,
+    url: NAVTITLE.ENROLLMENTS.url,
     icon: UsersIcon,
   },
   {
@@ -71,6 +83,16 @@ export const SIDEMENU = [
     title: NAVTITLE.FINANCIAL_REPORTS.title,
     url: NAVTITLE.FINANCIAL_REPORTS.url,
     icon: BarChart3Icon,
+  },
+  {
+    title: NAVTITLE.TRANSACTIONS.title,
+    url: NAVTITLE.TRANSACTIONS.url,
+    icon: LucideFileText,
+  },
+  {
+    title: NAVTITLE.ARCHIVE.title,
+    url: NAVTITLE.ARCHIVE.url,
+    icon: ArchiveIcon,
   },
 ];
 

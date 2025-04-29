@@ -2,15 +2,22 @@ import { createBrowserRouter } from "react-router-dom";
 import ErrorPage from "./pages/ErrorPage";
 import Layout from "./pages/Layout";
 import DashboardPage from "./pages/DashboardPage";
-import StudentsPage from "./pages/Students/StudentsPage";
 import TuitionPage from "./pages/Tuition/TuitionPage";
-import TuitionPaymentPage from "./pages/Tuition/TuitionPaymentPage";
-import CarpoolPage from "./pages/CarpoolPage";
+import CarpoolPage from "./pages/Carpool/CarpoolPage";
 import OtherIncomePage from "./pages/OtherIncomePage";
 import { NAVTITLE } from "./constants/side-menu";
 import FinancialReportsPage from "./pages/FinancialReportsPage";
 import SchoolExpensePage from "./pages/SchoolExpensePage";
 import CarpoolExpensePage from "./pages/CarpoolExpensePage";
+import EnrollmentPage from "./pages/Enrollment/EnrollmentPage";
+import TransactionsPage from "./pages/Transaction/TransactionPage";
+import EnrollStudentPage from "./pages/Enrollment/EnrollStudentPage";
+import ViewStudentDetailsPage from "./pages/Enrollment/Details/ViewStudentPageDetails";
+import EditStudentDetailsPage from "./pages/Enrollment/Details/EditStudentPageDetails";
+import TuitionDetailsPage from "./pages/Tuition/ViewTuitionPage";
+import TransactionDetailsPage from "./pages/Transaction/TransactionDetailsPage";
+import ArchivePage from "./pages/Archive/ArchivePage";
+import ArchiveDetailsPage from "./pages/Archive/ArchiveDetailsPage";
 
 const router = createBrowserRouter([
   {
@@ -26,19 +33,33 @@ const router = createBrowserRouter([
         path: NAVTITLE.DASHBOARD.url,
         element: <DashboardPage />,
       },
+      // Enrollment
       {
-        path: NAVTITLE.STUDENTS.url,
-        element: <StudentsPage />,
+        path: NAVTITLE.ENROLLMENTS.url,
+        element: <EnrollmentPage />,
       },
-
+      {
+        path: NAVTITLE.ENROLL_STUDENT.url,
+        element: <EnrollStudentPage />,
+      },
+      {
+        path: NAVTITLE.VIEW_STUDENT_DETAILS.url,
+        element: <ViewStudentDetailsPage />,
+      },
+      {
+        path: NAVTITLE.EDIT_STUDENT_DETAILS.url,
+        element: <EditStudentDetailsPage />,
+      },
+      // Tuition
       {
         path: NAVTITLE.TUITION.url,
         element: <TuitionPage />,
       },
       {
-        path: NAVTITLE.TUITION_PAYMENT.url,
-        element: <TuitionPaymentPage />,
+        path: NAVTITLE.TUITION_DETAILS.url,
+        element: <TuitionDetailsPage />,
       },
+      // Carpool
       {
         path: NAVTITLE.CARPOOL.url,
         element: <CarpoolPage />,
@@ -58,6 +79,24 @@ const router = createBrowserRouter([
       {
         path: NAVTITLE.FINANCIAL_REPORTS.url,
         element: <FinancialReportsPage />,
+      },
+      // Transactions
+      {
+        path: NAVTITLE.TRANSACTIONS.url,
+        element: <TransactionsPage />,
+      },
+      {
+        path: NAVTITLE.TRANSACTIONS_DETAILS.url,
+        element: <TransactionDetailsPage />,
+      },
+      // Archive
+      {
+        path: NAVTITLE.ARCHIVE.url,
+        element: <ArchivePage />,
+      },
+      {
+        path: NAVTITLE.ARCHIVE_DETAILS.url,
+        element: <ArchiveDetailsPage />,
       },
     ],
   },

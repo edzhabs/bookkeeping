@@ -1,7 +1,6 @@
-export default interface Enrollment {
-  schoolYear: number;
-  grade: string;
-  tuitionFee: number;
-  discountPercentage: number;
-  finalTuition: number;
+import { Student } from "@/types/student";
+
+export default interface Enrollment extends Student {
+  school_year: string;
+  discount: number;
 }

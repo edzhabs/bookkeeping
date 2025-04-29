@@ -3,17 +3,6 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import CalendarComponent from "@/components/Calendar";
-import CardPayment from "@/components/Payments/CardPayment";
-import InvoiceNumber from "@/components/Payments/InvoiceNumber";
-import Notes from "@/components/Payments/Notes";
-import PaymentMethod from "@/components/Payments/PaymentMethod";
-import StudentSection from "@/components/Payments/StudentSection";
-import TotalAmount from "@/components/Payments/TotalAmount";
-import TuitionAmountInput from "@/components/Payments/TuitionAmountInput";
-import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
 import { TuitionPaymentSchema } from "@/lib/validation/tuitionSchema";
 
 export default function TuitionPaymentPage() {
@@ -54,62 +43,63 @@ export default function TuitionPaymentPage() {
   }
 
   return (
-    <CardPayment
-      title="Tuition Payment Form"
-      description="Enter payment details for student tuition and fees"
-    >
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <StudentSection<z.infer<typeof TuitionPaymentSchema>> form={form} />
+    // <CardPayment
+    //   title="Tuition Payment Form"
+    //   description="Enter payment details for student tuition and fees"
+    // >
+    //   <Form {...form}>
+    //     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    //       <StudentSection<z.infer<typeof TuitionPaymentSchema>> form={form} />
 
-          {/* Tuition Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Tuition</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-2">
-              <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
-                form={form}
-                label="Reservation Fee (₱)"
-                name="reservationFee"
-              />
-              <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
-                form={form}
-                label="Tuition Fee (₱)"
-                name="tuitionFee"
-              />
-              <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
-                form={form}
-                label="Advance Payment (₱)"
-                name="advancePayment"
-              />
-            </div>
-            {form.formState.errors.fees?.message && (
-              <p className="text-sm text-destructive mt-2">
-                {form.formState.errors.fees.message}
-              </p>
-            )}
-          </div>
+    //       {/* Tuition Section */}
+    //       <div className="space-y-4">
+    //         <h3 className="text-lg font-medium">Tuition</h3>
+    //         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-2">
+    //           <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
+    //             form={form}
+    //             label="Reservation Fee (₱)"
+    //             name="reservationFee"
+    //           />
+    //           <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
+    //             form={form}
+    //             label="Tuition Fee (₱)"
+    //             name="tuitionFee"
+    //           />
+    //           <TuitionAmountInput<z.infer<typeof TuitionPaymentSchema>>
+    //             form={form}
+    //             label="Advance Payment (₱)"
+    //             name="advancePayment"
+    //           />
+    //         </div>
+    //         {form.formState.errors.fees?.message && (
+    //           <p className="text-sm text-destructive mt-2">
+    //             {form.formState.errors.fees.message}
+    //           </p>
+    //         )}
+    //       </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-2">
-            <PaymentMethod<z.infer<typeof TuitionPaymentSchema>> form={form} />
-            <InvoiceNumber<z.infer<typeof TuitionPaymentSchema>> form={form} />
-            <CalendarComponent<z.infer<typeof TuitionPaymentSchema>>
-              name="paymentDate"
-              label="Date of Payment"
-              form={form}
-            />
-          </div>
+    //       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-2">
+    //         <PaymentMethod<z.infer<typeof TuitionPaymentSchema>> form={form} />
+    //         <InvoiceNumber<z.infer<typeof TuitionPaymentSchema>> form={form} />
+    //         <CalendarComponent<z.infer<typeof TuitionPaymentSchema>>
+    //           name="paymentDate"
+    //           label="Date of Payment"
+    //           form={form}
+    //         />
+    //       </div>
 
-          <Notes<z.infer<typeof TuitionPaymentSchema>> form={form} />
+    //       <Notes<z.infer<typeof TuitionPaymentSchema>> form={form} />
 
-          <Separator />
+    //       <Separator />
 
-          <TotalAmount totalAmount={totalAmount} />
+    //       <TotalAmount totalAmount={totalAmount} />
 
-          <Button type="submit" className="w-full">
-            Submit Payment
-          </Button>
-        </form>
-      </Form>
-    </CardPayment>
+    //       <Button type="submit" className="w-full">
+    //         Submit Payment
+    //       </Button>
+    //     </form>
+    //   </Form>
+    // </CardPayment>
+    <div>payment</div>
   );
 }

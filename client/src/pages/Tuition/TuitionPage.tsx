@@ -1,156 +1,237 @@
-import { DebouncedInput } from "@/components/DebouncedInput";
-import { TuitionColumns } from "@/components/Table-Columns/tuition-columns";
-import { Button } from "@/components/ui/button";
-import { DataTableViewOptions } from "@/components/ui/Table/column-options";
-import { DataTable } from "@/components/ui/Table/data-table";
-import { NAVTITLE } from "@/constants/side-menu";
-import { HeaderContext } from "@/context/headerContext";
-import useStudents from "@/hooks/useStudents";
-import useTable from "@/hooks/useTable";
-import { CreditCard, PlusCircle, UserPlus } from "lucide-react";
-import { useContext, useEffect } from "react";
-import { Link } from "react-router-dom";
-// Mock data for tuition payments
-const tuitionPayments = [
+import { useState } from "react";
+import { LucideSearch } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { TuitionTable } from "@/components/tuition-table";
+import { PaymentForm } from "@/components/payment-form";
+import type { Tuition } from "@/types/tuition";
+import { logActivity } from "@/lib/activity-logger";
+
+// Sample data for demonstration
+const initialTuitions: Tuition[] = [
   {
-    id: "PAY-001",
-    studentName: "Juan Dela Cruz",
+    id: "1",
+    studentId: "1",
+    studentName: "John Doe",
     gradeLevel: "Grade 10",
-    paymentDate: new Date("2023-06-15"),
-    amount: 15000,
-    paymentType: "Tuition Fee",
-    paymentMethod: "Cash",
-    invoiceNo: "INV-2023-001",
+    discount: "None",
+    discountAmount: 0,
+    schoolYear: "2023-2024",
+    totalAmount: 50000,
+    remainingBalance: 0,
+    dueDate: "2023-09-15",
     status: "Paid",
+    payments: [
+      {
+        id: "p1",
+        invoiceNumber: "TUI-2023-001",
+        amount: 25000,
+        date: "2023-07-10",
+        method: "Bank Transfer",
+        notes: "First semester payment",
+        reservationFee: 5000,
+        tuitionFee: 20000,
+        advancePayment: 0,
+      },
+      {
+        id: "p2",
+        invoiceNumber: "TUI-2023-015",
+        amount: 25000,
+        date: "2023-11-05",
+        method: "Credit Card",
+        notes: "Second semester payment",
+        reservationFee: 0,
+        tuitionFee: 25000,
+        advancePayment: 0,
+      },
+    ],
   },
   {
-    id: "PAY-002",
-    studentName: "Maria Santos",
+    id: "2",
+    studentId: "2",
+    studentName: "Emma Smith",
     gradeLevel: "Grade 8",
-    paymentDate: new Date("2023-06-20"),
-    amount: 5000,
-    paymentType: "Reservation Fee",
-    paymentMethod: "GCash",
-    invoiceNo: "INV-2023-002",
-    status: "Paid",
+    discount: "Sibling Discount",
+    discountAmount: 5000,
+    schoolYear: "2023-2024",
+    totalAmount: 45000,
+    remainingBalance: 45000,
+    dueDate: "2023-09-15",
+    status: "Unpaid",
+    payments: [],
   },
   {
-    id: "PAY-003",
-    studentName: "Pedro Reyes",
-    gradeLevel: "Grade 12",
-    paymentDate: new Date("2023-07-05"),
-    amount: 20000,
-    paymentType: "Tuition Fee",
-    paymentMethod: "Bank Transfer",
-    invoiceNo: "INV-2023-003",
-    status: "Paid",
-  },
-  {
-    id: "PAY-004",
-    studentName: "Ana Gonzales",
-    gradeLevel: "Grade 7",
-    paymentDate: new Date("2023-07-10"),
-    amount: 10000,
-    paymentType: "Advance Payment",
-    paymentMethod: "Cash",
-    invoiceNo: "INV-2023-004",
-    status: "Paid",
-  },
-  {
-    id: "PAY-005",
-    studentName: "Jose Rizal",
-    gradeLevel: "Grade 11",
-    paymentDate: new Date("2023-07-15"),
-    amount: 12000,
-    paymentType: "Tuition Fee",
-    paymentMethod: "GCash",
-    invoiceNo: "INV-2023-005",
-    status: "Paid",
-  },
-  {
-    id: "PAY-006",
-    studentName: "Juan Dela Cruz",
-    gradeLevel: "Grade 10",
-    paymentDate: new Date("2023-08-01"),
-    amount: 8000,
-    paymentType: "Advance Payment",
-    paymentMethod: "Bank Transfer",
-    invoiceNo: "INV-2023-006",
-    status: "Paid",
-  },
-  {
-    id: "PAY-007",
-    studentName: "Maria Santos",
-    gradeLevel: "Grade 8",
-    paymentDate: new Date("2023-08-10"),
-    amount: 10000,
-    paymentType: "Tuition Fee",
-    paymentMethod: "Cash",
-    invoiceNo: "INV-2023-007",
-    status: "Paid",
+    id: "3",
+    studentId: "3",
+    studentName: "Michael Johnson",
+    gradeLevel: "Grade 9",
+    discount: "None",
+    discountAmount: 0,
+    schoolYear: "2023-2024",
+    totalAmount: 45000,
+    remainingBalance: 25000,
+    dueDate: "2023-09-15",
+    status: "Partial",
+    payments: [
+      {
+        id: "p3",
+        invoiceNumber: "TUI-2023-008",
+        amount: 20000,
+        date: "2023-09-05",
+        method: "Cash",
+        notes: "Initial payment",
+        reservationFee: 5000,
+        tuitionFee: 15000,
+        advancePayment: 0,
+      },
+    ],
   },
 ];
-const TuitionPage = () => {
-  const { setHeaderTitle } = useContext(HeaderContext);
 
-  const { isError, isLoading } = useStudents();
-  const { table, setGlobalFilter } = useTable(TuitionColumns, tuitionPayments);
+export default function TuitionsPage() {
+  const navigate = useNavigate();
+  const [tuitions, setTuitions] = useState<Tuition[]>(initialTuitions);
+  const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
+  const [selectedTuition, setSelectedTuition] = useState<Tuition | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    setHeaderTitle(NAVTITLE.TUITION.title);
-  }, [setHeaderTitle]);
+  const filteredTuitions = tuitions.filter(
+    (tuition) =>
+      tuition.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tuition.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      tuition.schoolYear.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handlePayment = (
+    tuitionId: string,
+    paymentData: {
+      reservationFee: number;
+      tuitionFee: number;
+      advancePayment: number;
+      method: string;
+      invoiceNumber: string;
+      date: string;
+      notes: string;
+    }
+  ) => {
+    setTuitions((prevTuitions) =>
+      prevTuitions.map((tuition) => {
+        if (tuition.id === tuitionId) {
+          const totalAmount =
+            paymentData.reservationFee +
+            paymentData.tuitionFee +
+            paymentData.advancePayment;
+
+          const newPayment = {
+            id: `p${Date.now()}`,
+            invoiceNumber: paymentData.invoiceNumber,
+            amount: totalAmount,
+            date: paymentData.date,
+            method: paymentData.method,
+            notes: paymentData.notes,
+            reservationFee: paymentData.reservationFee,
+            tuitionFee: paymentData.tuitionFee,
+            advancePayment: paymentData.advancePayment,
+          };
+
+          const newRemainingBalance = Math.max(
+            0,
+            tuition.remainingBalance - totalAmount
+          );
+          const newStatus =
+            newRemainingBalance === 0
+              ? "Paid"
+              : newRemainingBalance < tuition.totalAmount
+              ? "Partial"
+              : "Unpaid";
+
+          const updatedTuition = {
+            ...tuition,
+            status: newStatus,
+            remainingBalance: newRemainingBalance,
+            payments: [...(tuition.payments || []), newPayment],
+          };
+
+          logActivity({
+            action: "Updated",
+            entityType: "Tuition",
+            entityId: tuitionId,
+            details: `Payment of ₱${totalAmount} made via ${paymentData.method}. Invoice #${paymentData.invoiceNumber} generated. Status updated to ${newStatus}.`,
+          });
+
+          return updatedTuition;
+        }
+        return tuition;
+      })
+    );
+    setIsPaymentFormOpen(false);
+    setSelectedTuition(null);
+  };
+
+  const handleViewTuition = (tuitionId: string) => {
+    navigate(`/tuitions/${tuitionId}`);
+  };
+
+  const handleViewStudent = (studentId: string) => {
+    navigate(`/enrollment/${studentId}`);
+  };
+
+  const openPaymentForm = (tuition: Tuition) => {
+    setSelectedTuition(tuition);
+    setIsPaymentFormOpen(true);
+  };
 
   return (
-    <div className="container mx-auto py-2">
-      <div className="flex flex-wrap gap-2 w-full pb-4 sm:w-auto">
-        <Link to="/tuition/payment">
-          <Button asChild className="flex-1 sm:flex-none cursor-pointer">
-            <span>
-              <CreditCard className="mr-2 h-4 w-4" />
-              Pay Tuition
-            </span>
-          </Button>
-        </Link>
-        <Button
-          asChild
-          variant="outline"
-          className="flex-1 sm:flex-none cursor-pointer"
-        >
-          <span>
-            <PlusCircle className="mr-2 h-4 w-4" />
-            Enroll New Student
-          </span>
-        </Button>
-        <Button
-          asChild
-          variant="outline"
-          className="flex-1 sm:flex-none cursor-pointer"
-        >
-          <span>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Enroll Existing Student
-          </span>
-        </Button>
-      </div>
-      <div className="flex items-center pb-2">
-        <DebouncedInput
-          value={table.getState().globalFilter || ""}
-          placeholder="search.."
-          onChange={(value) => setGlobalFilter(value)}
-          className="w-1/4"
-        />
-        {/* Visibility */}
-        <DataTableViewOptions table={table} />
+    <div className="container py-8">
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <h1 className="text-3xl font-bold">Tuition Management</h1>
       </div>
 
-      <DataTable
-        table={table}
-        columns={TuitionColumns}
-        isLoading={isLoading}
-        isError={isError}
-      />
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Tuition Records</CardTitle>
+          <CardDescription>
+            View and manage student tuition payments
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="mb-4 flex w-full max-w-sm items-center space-x-2">
+            <Input
+              type="text"
+              placeholder="Search tuitions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+              icon={<LucideSearch className="h-4 w-4" />}
+            />
+          </div>
+          <TuitionTable
+            tuitions={filteredTuitions}
+            onPayClick={openPaymentForm}
+            onViewClick={handleViewTuition}
+            onStudentClick={handleViewStudent}
+          />
+        </CardContent>
+      </Card>
+
+      {selectedTuition && (
+        <PaymentForm
+          isOpen={isPaymentFormOpen}
+          onClose={() => {
+            setIsPaymentFormOpen(false);
+            setSelectedTuition(null);
+          }}
+          tuition={selectedTuition}
+          onSubmit={handlePayment}
+        />
+      )}
     </div>
   );
-};
-
-export default TuitionPage;
+}
