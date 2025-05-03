@@ -58,7 +58,7 @@ function useTable<TData>(
     [data, columns, sorting, columnFilters, columnVisibility, globalFilter]
   );
 
-  const table = useReactTable(tableConfig);
+  const table = useReactTable<TData>(tableConfig);
 
   return { table, setGlobalFilter };
 }

@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1",
+    "first_name": "John",
+    "middle_name": "Robert",
+    "last_name": "Doe",
+    "full_name": "JOHN ROBERT DOE JR",
+    "gender": "Male",
+    "birthdate": "2010-05-15",
+    "school_year": "2023-2024",
+    "suffix": "",
+    "livingWith": "Both Parents",
+    "discount_type": "None",
+    "discount_percentage": 0,
+    "grade_level": "Grade 10",
+    "parents": {
+      "father": {
+        "fullName": "Robert Doe",
+        "job": "Engineer",
+        "educationAttainment": "Bachelor's Degree"
+      },
+      "mother": {
+        "fullName": "Jane Doe",
+        "job": "Doctor",
+        "educationAttainment": "Doctorate"
+      }
+    }
+  },
+  {
+    "id": "2",
+    "first_name": "Emma",
+    "middle_name": "Grace",
+    "last_name": "Smith",
+    "full_name": "EMMA GRACE SMITH",
+    "gender": "female",
+    "birthdate": "2011-08-22",
+    "school_year": "2023-2024",
+    "suffix": "",
+    "livingWith": "Mother",
+    "discount_type": "Sibling Discount",
+    "discount_percentage": 10,
+    "grade_level": "Grade 8",
+    "parents": {
+      "mother": {
+        "fullName": "Sarah Smith",
+        "job": "Teacher",
+        "educationAttainment": "Master's Degree"
+      }
+    }
+  }
+]

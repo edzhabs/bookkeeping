@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowLeft } from "lucide-react";
@@ -25,6 +25,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { logActivity } from "@/lib/activity-logger";
 import type { Student } from "@/types/student";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -46,7 +47,6 @@ const studentFormSchema = z.object({
     .min(4, { message: "Please enter a valid school year." }),
   suffix: z.string().optional(),
   livingWith: z.string().optional(),
-  discount: z.string().optional(),
   gradeLevel: z.string().min(1, { message: "Grade level is required." }),
   fatherName: z.string().optional(),
   fatherJob: z.string().optional(),
@@ -56,6 +56,17 @@ const studentFormSchema = z.object({
   motherEducation: z.string().optional(),
 });
 
+const feesFormSchema = z.object({
+  enrollmentFee: z.coerce.number().min(0),
+  tuitionFeeMonthly: z.coerce.number().min(0),
+  miscFee: z.coerce.number().min(0),
+  ptaFee: z.coerce.number().min(0),
+  quipperFee: z.coerce.number().min(0),
+  isRankOne: z.boolean().default(false),
+  hasSiblingDiscount: z.boolean().default(false),
+  hasWholeYearDiscount: z.boolean().default(false),
+});
+
 const tuitionFormSchema = z.object({
   baseTuition: z.coerce
     .number()
@@ -63,11 +74,23 @@ const tuitionFormSchema = z.object({
     .refine((val) => val > 0, { message: "Amount must be greater than 0." }),
 });
 
-export default function EnrollStudentPage() {
+export default function NewEnrollmentPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("student");
   const [studentData, setStudentData] = useState<Student | null>(null);
   const [discountPercentage, setDiscountPercentage] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
+  const [discountLabel, setDiscountLabel] = useState("None");
+
+  // Fee structure
+  const [enrollmentFee, setEnrollmentFee] = useState(3000);
+  const [tuitionFeeMonthly, setTuitionFeeMonthly] = useState(2600);
+  const [miscFee, setMiscFee] = useState(5000);
+  const [ptaFee, setPtaFee] = useState(500);
+  const [quipperFee, setQuipperFee] = useState(2000);
+  const [totalTuitionFee, setTotalTuitionFee] = useState(26000); // 10 months
+  const [grandTotal, setGrandTotal] = useState(0);
 
   const studentForm = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
@@ -81,7 +104,6 @@ export default function EnrollStudentPage() {
         new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
       suffix: "",
       livingWith: "Both Parents",
-      discount: "None",
       gradeLevel: "Grade 1",
       fatherName: "",
       fatherJob: "",
@@ -92,50 +114,98 @@ export default function EnrollStudentPage() {
     },
   });
 
-  const tuitionForm = useForm<z.infer<typeof tuitionFormSchema>>({
-    resolver: zodResolver(tuitionFormSchema),
+  const feesForm = useForm<z.infer<typeof feesFormSchema>>({
+    resolver: zodResolver(feesFormSchema),
     defaultValues: {
-      baseTuition: 0,
+      enrollmentFee: 3000,
+      tuitionFeeMonthly: 2600,
+      miscFee: 5000,
+      ptaFee: 500,
+      quipperFee: 2000,
+      isRankOne: false,
+      hasSiblingDiscount: false,
+      hasWholeYearDiscount: false,
     },
   });
 
-  /// Handle discount percentage based on selected discount
-  const discountType = useWatch({
-    control: studentForm.control,
-    name: "discount",
+  const tuitionForm = useForm<z.infer<typeof tuitionFormSchema>>({
+    resolver: zodResolver(tuitionFormSchema),
+    defaultValues: {
+      baseTuition: 50000,
+    },
   });
-  useEffect(() => {
-    let percentage = 0;
 
-    switch (discountType) {
-      case "Sibling Discount":
-        percentage = 10;
-        break;
-      case "Scholar":
-        percentage = 50;
-        break;
-      case "Employee Discount":
-        percentage = 20;
-        break;
-      default:
-        percentage = 0;
+  // Calculate fees and discounts when values change
+  useEffect(() => {
+    const values = feesForm.getValues();
+    const monthlyTuition = values.tuitionFeeMonthly;
+    const totalTuition = monthlyTuition * 10;
+    setTotalTuitionFee(totalTuition);
+
+    let discountAmt = 0;
+    const discountDescription = [];
+
+    // Calculate Rank One discount (free Quipper)
+    if (values.isRankOne) {
+      discountAmt += values.quipperFee;
+      discountDescription.push("Rank One (Free Quipper)");
     }
 
-    setDiscountPercentage(percentage);
-  }, [discountType]);
+    // Calculate Sibling discount (5% of tuition)
+    if (values.hasSiblingDiscount) {
+      const siblingDiscountAmount = totalTuition * 0.05;
+      discountAmt += siblingDiscountAmount;
+      discountDescription.push("Sibling Discount (5%)");
+    }
 
-  // Calculate discount and total amount when base tuition or discount percentage changes
-  const currentBaseTuition = useWatch({
-    control: tuitionForm.control,
-    name: "baseTuition",
-  });
-  const discountAmount = useMemo(() => {
-    return (discountPercentage / 100) * currentBaseTuition;
-  }, [discountPercentage, currentBaseTuition]);
+    // Calculate Whole Year discount (one month free)
+    if (values.hasWholeYearDiscount) {
+      const wholeYearDiscountAmount = monthlyTuition;
+      discountAmt += wholeYearDiscountAmount;
+      discountDescription.push("Whole Year Payment (1 month free)");
+    }
 
-  const totalAmount = useMemo(() => {
-    return currentBaseTuition - discountAmount;
-  }, [currentBaseTuition, discountAmount]);
+    // Set discount percentage (approximate for display)
+    const totalBeforeDiscount =
+      values.enrollmentFee +
+      totalTuition +
+      values.miscFee +
+      values.ptaFee +
+      values.quipperFee;
+    const discountPct = Math.round((discountAmt / totalBeforeDiscount) * 100);
+
+    setDiscountAmount(discountAmt);
+    setDiscountPercentage(discountPct);
+
+    // Calculate grand total
+    const total =
+      values.enrollmentFee +
+      totalTuition +
+      values.miscFee +
+      values.ptaFee +
+      (values.isRankOne ? 0 : values.quipperFee) -
+      (values.hasSiblingDiscount ? totalTuition * 0.05 : 0) -
+      (values.hasWholeYearDiscount ? monthlyTuition : 0);
+
+    setGrandTotal(total);
+    setTotalAmount(total);
+
+    // Update student discount description
+    if (discountDescription.length > 0) {
+      setDiscountLabel(discountDescription.join(" + "));
+    } else {
+      setDiscountLabel("None");
+    }
+  }, [
+    feesForm.watch("enrollmentFee"),
+    feesForm.watch("tuitionFeeMonthly"),
+    feesForm.watch("miscFee"),
+    feesForm.watch("ptaFee"),
+    feesForm.watch("quipperFee"),
+    feesForm.watch("isRankOne"),
+    feesForm.watch("hasSiblingDiscount"),
+    feesForm.watch("hasWholeYearDiscount"),
+  ]);
 
   const handleStudentSubmit = (values: z.infer<typeof studentFormSchema>) => {
     // Create student object
@@ -149,8 +219,8 @@ export default function EnrollStudentPage() {
       schoolYear: values.schoolYear,
       suffix: values.suffix || "",
       livingWith: values.livingWith || "",
-      discount: values.discount || "None",
-      discountPercentage: discountPercentage,
+      discount: "None", // Will be updated in fees tab
+      discountPercentage: 0, // Will be updated in fees tab
       gradeLevel: values.gradeLevel,
       parents: {
         ...(values.fatherName
@@ -175,7 +245,7 @@ export default function EnrollStudentPage() {
     };
 
     setStudentData(student);
-    setActiveTab("tuition");
+    setActiveTab("fees");
 
     logActivity({
       action: "Created",
@@ -183,6 +253,20 @@ export default function EnrollStudentPage() {
       entityId: student.id,
       details: `Created student record for ${student.firstName} ${student.lastName}`,
     });
+  };
+
+  const handleFeesSubmit = (values: z.infer<typeof feesFormSchema>) => {
+    if (!studentData) return;
+
+    // Update student data with discount information
+    const updatedStudent = {
+      ...studentData,
+      discount: discountLabel,
+      discountPercentage: discountPercentage,
+    };
+
+    setStudentData(updatedStudent);
+    setActiveTab("tuition");
   };
 
   const handleTuitionSubmit = (values: z.infer<typeof tuitionFormSchema>) => {
@@ -214,7 +298,6 @@ export default function EnrollStudentPage() {
     // In a real app, you would save this data to your database
     console.log("Student data:", studentData);
     console.log("Tuition data:", tuition);
-    console.log(values);
 
     // Redirect to enrollment page
     navigate("/enrollment");
@@ -250,10 +333,13 @@ export default function EnrollStudentPage() {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="student">Student Information</TabsTrigger>
+          <TabsTrigger value="fees" disabled={!studentData}>
+            Fees & Discounts
+          </TabsTrigger>
           <TabsTrigger value="tuition" disabled={!studentData}>
-            Tuition Setup
+            Tuition Summary
           </TabsTrigger>
         </TabsList>
 
@@ -269,7 +355,7 @@ export default function EnrollStudentPage() {
                   className="space-y-6"
                 >
                   <div className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-3 w-full">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <FormField
                         control={studentForm.control}
                         name="firstName"
@@ -311,7 +397,7 @@ export default function EnrollStudentPage() {
                       />
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-3 w-full">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <FormField
                         control={studentForm.control}
                         name="gender"
@@ -395,7 +481,7 @@ export default function EnrollStudentPage() {
                       />
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-3 w-full">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <FormField
                         control={studentForm.control}
                         name="schoolYear"
@@ -454,47 +540,13 @@ export default function EnrollStudentPage() {
                         )}
                       />
                     </div>
-
-                    <FormField
-                      control={studentForm.control}
-                      name="discount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Discount</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl className="w-full">
-                              <SelectTrigger className="w-full">
-                                <SelectValue placeholder="Select discount" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="None">None (0%)</SelectItem>
-                              <SelectItem value="Sibling Discount">
-                                Sibling Discount (10%)
-                              </SelectItem>
-                              <SelectItem value="Scholar">
-                                Scholar (50%)
-                              </SelectItem>
-                              <SelectItem value="Employee Discount">
-                                Employee Discount (20%)
-                              </SelectItem>
-                              <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">
                       Father's Information
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-3 w-full">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <FormField
                         control={studentForm.control}
                         name="fatherName"
@@ -544,7 +596,7 @@ export default function EnrollStudentPage() {
                     <h3 className="text-lg font-medium">
                       Mother's Information
                     </h3>
-                    <div className="grid gap-4 md:grid-cols-3 w-full">
+                    <div className="grid gap-4 md:grid-cols-3">
                       <FormField
                         control={studentForm.control}
                         name="motherName"
@@ -591,7 +643,7 @@ export default function EnrollStudentPage() {
                   </div>
 
                   <div className="flex justify-end">
-                    <Button type="submit">Continue to Tuition Setup</Button>
+                    <Button type="submit">Continue to Fees & Discounts</Button>
                   </div>
                 </form>
               </Form>
@@ -599,12 +651,282 @@ export default function EnrollStudentPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="fees" className="space-y-6">
+          {studentData && (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  Fees & Discounts for {studentData.firstName}{" "}
+                  {studentData.lastName}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...feesForm}>
+                  <form
+                    onSubmit={feesForm.handleSubmit(handleFeesSubmit)}
+                    className="space-y-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Fee Structure</h3>
+
+                        <FormField
+                          control={feesForm.control}
+                          name="enrollmentFee"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Enrollment Fee</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={feesForm.control}
+                          name="tuitionFeeMonthly"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Monthly Tuition Fee</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                              <p className="text-xs text-muted-foreground">
+                                Total for 10 months: ₱
+                                {(field.value * 10).toLocaleString()}
+                              </p>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={feesForm.control}
+                          name="miscFee"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Miscellaneous Fee</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={feesForm.control}
+                          name="ptaFee"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>PTA Fee</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={feesForm.control}
+                          name="quipperFee"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Quipper LMS and Books Fee</FormLabel>
+                              <FormControl>
+                                <Input type="number" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="space-y-6">
+                          <h3 className="text-lg font-medium">Discounts</h3>
+
+                          <div className="space-y-4">
+                            <FormField
+                              control={feesForm.control}
+                              name="isRankOne"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={field.onChange}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>Rank One in Class</FormLabel>
+                                    <p className="text-sm text-muted-foreground">
+                                      100% Free Quipper LMS and Books
+                                    </p>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={feesForm.control}
+                              name="hasSiblingDiscount"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        // If sibling discount is checked, uncheck whole year discount
+                                        if (checked) {
+                                          feesForm.setValue(
+                                            "hasWholeYearDiscount",
+                                            false
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>Sibling Discount</FormLabel>
+                                    <p className="text-sm text-muted-foreground">
+                                      5% off tuition fee for one sibling when 2+
+                                      siblings are enrolled
+                                    </p>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+
+                            <FormField
+                              control={feesForm.control}
+                              name="hasWholeYearDiscount"
+                              render={({ field }) => (
+                                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                  <FormControl>
+                                    <Checkbox
+                                      checked={field.value}
+                                      onCheckedChange={(checked) => {
+                                        field.onChange(checked);
+                                        // If whole year discount is checked, uncheck sibling discount
+                                        if (checked) {
+                                          feesForm.setValue(
+                                            "hasSiblingDiscount",
+                                            false
+                                          );
+                                        }
+                                      }}
+                                    />
+                                  </FormControl>
+                                  <div className="space-y-1 leading-none">
+                                    <FormLabel>Whole Year Payment</FormLabel>
+                                    <p className="text-sm text-muted-foreground">
+                                      One month free tuition when paying for the
+                                      whole year
+                                    </p>
+                                  </div>
+                                </FormItem>
+                              )}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="bg-muted p-6 rounded-md space-y-4 mt-6">
+                          <h3 className="text-lg font-medium">Fee Breakdown</h3>
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <p className="text-sm">Enrollment Fee:</p>
+                              <p className="text-sm font-medium">
+                                ₱
+                                {feesForm
+                                  .watch("enrollmentFee")
+                                  .toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">
+                                Tuition Fee (10 months):
+                              </p>
+                              <p className="text-sm font-medium">
+                                ₱
+                                {(
+                                  feesForm.watch("tuitionFeeMonthly") * 10
+                                ).toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">Miscellaneous Fee:</p>
+                              <p className="text-sm font-medium">
+                                ₱{feesForm.watch("miscFee").toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">PTA Fee:</p>
+                              <p className="text-sm font-medium">
+                                ₱{feesForm.watch("ptaFee").toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">Quipper LMS and Books:</p>
+                              <p className="text-sm font-medium">
+                                {feesForm.watch("isRankOne") ? (
+                                  <span className="line-through">
+                                    ₱
+                                    {feesForm
+                                      .watch("quipperFee")
+                                      .toLocaleString()}
+                                  </span>
+                                ) : (
+                                  `₱${feesForm
+                                    .watch("quipperFee")
+                                    .toLocaleString()}`
+                                )}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-sm">Discount:</p>
+                              <p className="text-sm font-medium">
+                                - ₱{discountAmount.toLocaleString()}
+                              </p>
+                            </div>
+                            <div className="border-t pt-2 flex justify-between">
+                              <p className="text-sm font-medium">Total Fees:</p>
+                              <p className="text-sm font-bold">
+                                ₱{grandTotal.toLocaleString()}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("student")}
+                      >
+                        Back to Student Information
+                      </Button>
+                      <Button type="submit">Continue to Tuition Summary</Button>
+                    </div>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
         <TabsContent value="tuition" className="space-y-6">
           {studentData && (
             <Card>
               <CardHeader>
                 <CardTitle>
-                  Tuition Setup for {studentData.firstName}{" "}
+                  Tuition Summary for {studentData.firstName}{" "}
                   {studentData.lastName}
                 </CardTitle>
               </CardHeader>
@@ -643,20 +965,6 @@ export default function EnrollStudentPage() {
                             </p>
                           </div>
                         </div>
-
-                        <FormField
-                          control={tuitionForm.control}
-                          name="baseTuition"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Base Tuition Amount</FormLabel>
-                              <FormControl>
-                                <Input type="number" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
                       </div>
 
                       <div className="bg-muted p-6 rounded-md space-y-4">
@@ -665,15 +973,51 @@ export default function EnrollStudentPage() {
                         </h3>
                         <div className="space-y-2">
                           <div className="flex justify-between">
-                            <p className="text-sm">Base Tuition:</p>
+                            <p className="text-sm">Enrollment Fee:</p>
                             <p className="text-sm font-medium">
-                              ₱{currentBaseTuition.toLocaleString()}
+                              ₱
+                              {feesForm
+                                .getValues()
+                                .enrollmentFee.toLocaleString()}
                             </p>
                           </div>
                           <div className="flex justify-between">
-                            <p className="text-sm">
-                              Discount ({discountPercentage}%):
+                            <p className="text-sm">Tuition Fee (10 months):</p>
+                            <p className="text-sm font-medium">
+                              ₱{totalTuitionFee.toLocaleString()}
                             </p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p className="text-sm">Miscellaneous Fee:</p>
+                            <p className="text-sm font-medium">
+                              ₱{feesForm.getValues().miscFee.toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p className="text-sm">PTA Fee:</p>
+                            <p className="text-sm font-medium">
+                              ₱{feesForm.getValues().ptaFee.toLocaleString()}
+                            </p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p className="text-sm">Quipper LMS and Books:</p>
+                            <p className="text-sm font-medium">
+                              {feesForm.getValues().isRankOne ? (
+                                <span className="line-through">
+                                  ₱
+                                  {feesForm
+                                    .getValues()
+                                    .quipperFee.toLocaleString()}
+                                </span>
+                              ) : (
+                                `₱${feesForm
+                                  .getValues()
+                                  .quipperFee.toLocaleString()}`
+                              )}
+                            </p>
+                          </div>
+                          <div className="flex justify-between">
+                            <p className="text-sm">Discount:</p>
                             <p className="text-sm font-medium">
                               - ₱{discountAmount.toLocaleString()}
                             </p>
@@ -694,9 +1038,9 @@ export default function EnrollStudentPage() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setActiveTab("student")}
+                        onClick={() => setActiveTab("fees")}
                       >
-                        Back to Student Information
+                        Back to Fees & Discounts
                       </Button>
                       <Button type="submit">Complete Enrollment</Button>
                     </div>

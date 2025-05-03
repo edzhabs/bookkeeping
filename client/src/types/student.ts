@@ -1,21 +1,22 @@
 export interface Student {
   id: string;
-  first_name: string;
-  middle_name: string;
-  last_name: string;
+  firstName: string;
+  middleName: string;
+  lastName: string;
+  suffix: string;
+  fullname: string;
   gender: string;
   birthdate: string;
-  school_year: string;
-  suffix: string;
-  livingWith: string;
+  living_with: string;
   parents: {
+    contactNumbers: string[];
     father?: {
-      fullName: string;
+      name: string;
       job: string;
       educationAttainment: string;
     };
     mother?: {
-      fullName: string;
+      name: string;
       job: string;
       educationAttainment: string;
     };

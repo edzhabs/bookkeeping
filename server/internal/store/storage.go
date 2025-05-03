@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/lib/pq"
 )
 
 var (
 	ErrConflict       = errors.New("resource already exist")
+	ErrRequiredFees   = errors.New("enrollment, tuition, misc, pta, lms_books fees must be greater than zero")
 	ErrDuplicate      = errors.New("student with that record already exist")
 	ErrNotFound       = errors.New("record not found")
 	QueryTimeDuration = time.Second * 5
@@ -19,11 +22,15 @@ type Storage struct {
 		Create(ctx context.Context, student *Student) error
 		GetAll(ctx context.Context) ([]StudentWithAge, error)
 	}
+	Enrollments interface {
+		Create(ctx context.Context, enrollment *Enrollment) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Students: &StudentStore{db},
+		Students:    &StudentStore{db},
+		Enrollments: &EnrollmentStore{db},
 	}
 }
 
@@ -40,4 +47,18 @@ func withTx(ctx context.Context, db *sql.DB, fn func(tx *sql.Tx) error) error {
 	}
 
 	return tx.Commit()
+}
+
+func parsePgError(err error) error {
+	var pgErr *pq.Error
+	if errors.As(err, &pgErr) {
+		switch pgErr.Constraint {
+		case "enrollments_student_id_school_year_key":
+			return ErrDuplicate
+		case "check_positive_fees":
+			return ErrRequiredFees
+		}
+	}
+
+	return err
 }

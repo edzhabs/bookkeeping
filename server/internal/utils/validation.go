@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/shopspring/decimal"
 )
 
 var Validate *validator.Validate
@@ -15,6 +16,9 @@ func init() {
 	Validate.RegisterValidation("trimmedSpace", trimmedSpace)
 	Validate.RegisterValidation("validBirthdate", validBirthdate)
 	Validate.RegisterValidation("alpha_with_spaces", validateAlphaWithSpaces)
+	Validate.RegisterValidation("schoolyear", validateSchoolYear)
+	Validate.RegisterValidation("discounts", validateDiscounts)
+	Validate.RegisterValidation("decimalGt", validateDecimalGTZero)
 }
 
 func trimmedSpace(fl validator.FieldLevel) bool {
@@ -22,7 +26,6 @@ func trimmedSpace(fl validator.FieldLevel) bool {
 	return strings.TrimSpace(str) == str
 }
 
-// Custom validation function to allow alphabetic characters and spaces
 func validateAlphaWithSpaces(fl validator.FieldLevel) bool {
 	// The regex allows alphabetic characters and spaces
 	re := regexp.MustCompile(`^[A-Za-z\s]+$`)
@@ -33,21 +36,88 @@ func validBirthdate(fl validator.FieldLevel) bool {
 	// Define the expected layout for the birthday string (e.g., "2006-01-02" format)
 	layout := "2006-01-02"
 
-	// Get the birthday string from the field
 	birthdayStr := fl.Field().String()
 
-	// Try to parse the string into time.Time
 	birthday, err := time.Parse(layout, birthdayStr)
 	if err != nil {
-		return false // Return false if parsing fails
+		return false
 	}
 
-	// Optionally, check if the birthday is in the past (you can adjust this as needed)
-	// You can skip this if you just want to ensure the date is valid without checking if it's in the past
 	if birthday.After(time.Now()) {
-		return false // If the birthday is in the future, it's invalid
+		return false
 	}
 
-	// If everything is good, return true
 	return true
+}
+
+func validateSchoolYear(fl validator.FieldLevel) bool {
+	schoolYear := fl.Field().String()
+
+	// Match pattern YYYY-YYYY
+	pattern := regexp.MustCompile(`^(\d{4})-(\d{4})$`)
+	matches := pattern.FindStringSubmatch(schoolYear)
+
+	if len(matches) != 3 {
+		return false
+	}
+
+	firstYear := matches[1]
+	secondYear := matches[2]
+
+	// Check if second year is one more than first year
+	if secondYear != firstYear[:2]+firstYear[2:]+"1" {
+		firstYearInt := atoi(firstYear)
+		secondYearInt := atoi(secondYear)
+
+		if secondYearInt != firstYearInt+1 {
+			return false
+		}
+	}
+
+	return true
+}
+
+func validateDiscounts(fl validator.FieldLevel) bool {
+	validDiscounts := map[string]bool{
+		"rank_1":    true,
+		"sibling":   true,
+		"full_year": true,
+		"scholar":   true,
+	}
+
+	discounts := fl.Field().Interface().([]string)
+	seen := make(map[string]bool)
+
+	for _, d := range discounts {
+		if !validDiscounts[d] {
+			return false
+		}
+		seen[d] = true
+	}
+
+	if seen["scholar"] && len(discounts) > 1 {
+		return false
+	}
+
+	if seen["full_year"] && seen["sibling"] {
+		return false
+	}
+
+	return true
+}
+
+func atoi(s string) int {
+	var result int
+	for _, c := range s {
+		result = result*10 + int(c-'0')
+	}
+	return result
+}
+
+func validateDecimalGTZero(fl validator.FieldLevel) bool {
+	value, ok := fl.Field().Interface().(decimal.Decimal)
+	if !ok {
+		return false // Ensure the field is of type decimal.Decimal
+	}
+	return value.GreaterThan(decimal.Zero) // Check if the value is greater than 0
 }

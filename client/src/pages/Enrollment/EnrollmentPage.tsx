@@ -1,7 +1,6 @@
 import { LucidePlus, LucideSearch } from "lucide-react";
 import { useContext, useEffect, useState } from "react";
 
-import { EnrollmentTable } from "@/components/enrollment-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,92 +12,47 @@ import {
 } from "@/components/ui/select";
 import { NAVTITLE } from "@/constants/side-menu";
 import { HeaderContext } from "@/context/headerContext";
-import type { Student } from "@/types/student";
 import { useNavigate } from "react-router-dom";
+import { DataTable } from "@/components/custom-table";
+import useTable from "@/hooks/useTable";
+import { EnrollmentColumns } from "@/components/Table/Columns/enrollment-column";
+import { Enrollment } from "@/types/enrollment";
+import { DataTableViewOptions } from "@/components/Table/Columns/column-options";
+import { useQuery } from "@tanstack/react-query";
+import axiosClient from "@/services/api-client";
 
-// Sample data for demonstration
-const initialStudents: Student[] = [
-  {
-    id: "1",
-    firstName: "John",
-    middleName: "Robert",
-    lastName: "Doe",
-    gender: "Male",
-    birthdate: "2010-05-15",
-    schoolYear: "2023-2024",
-    suffix: "",
-    livingWith: "Both Parents",
-    discount: "None",
-    discountPercentage: 0,
-    gradeLevel: "Grade 10",
-    parents: {
-      father: {
-        fullName: "Robert Doe",
-        job: "Engineer",
-        educationAttainment: "Bachelor's Degree",
-      },
-      mother: {
-        fullName: "Jane Doe",
-        job: "Doctor",
-        educationAttainment: "Doctorate",
-      },
-    },
-  },
-  {
-    id: "2",
-    firstName: "Emma",
-    middleName: "Grace",
-    lastName: "Smith",
-    gender: "Female",
-    birthdate: "2011-08-22",
-    schoolYear: "2023-2024",
-    suffix: "",
-    livingWith: "Mother",
-    discount: "Sibling Discount",
-    discountPercentage: 10,
-    gradeLevel: "Grade 8",
-    parents: {
-      mother: {
-        fullName: "Sarah Smith",
-        job: "Teacher",
-        educationAttainment: "Master's Degree",
-      },
-    },
-  },
-];
+const fetchEnrollment = async (searchQuery: string) => {
+  try {
+    const response = await axiosClient.get("/enrollment.json", {
+      params: { searchQuery: searchQuery },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching enrollment data", error);
+    throw error;
+  }
+};
 
 export default function EnrollmentPage() {
   const header = useContext(HeaderContext);
   const navigate = useNavigate();
-  const [students, setStudents] = useState<Student[]>(initialStudents);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"All" | "Tuition" | "Carpool">(
     "All"
   );
+
+  const { data } = useQuery({
+    queryKey: ["enrollment", searchQuery],
+    queryFn: () => fetchEnrollment(searchQuery),
+  });
 
   useEffect(() => {
     header.setHeaderTitle(NAVTITLE.ENROLLMENTS.title);
   }, [header]);
 
-  const filteredStudents = students.filter(
-    (student) =>
-      student.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.schoolYear.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleEditStudent = (student: Student) => {
-    navigate(`/enrollment/${student.id}/edit`);
-    console.log("edit");
-  };
-
-  const handleViewStudent = (student: Student) => {
-    navigate(`/enrollment/${student.id}`);
-    console.log("view");
-  };
-
-  const handleDeleteStudent = (studentId: string) => {
-    setStudents(students.filter((student) => student.id !== studentId));
+  const { table } = useTable<Enrollment>(EnrollmentColumns, data);
+  const handleClick = (id: string) => {
+    navigate("/enrollment/" + id);
   };
 
   return (
@@ -117,8 +71,8 @@ export default function EnrollmentPage() {
           <Input
             type="text"
             placeholder="Search students..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10"
           />
         </div>
@@ -139,14 +93,21 @@ export default function EnrollmentPage() {
             <SelectItem value="Carpool">Carpool Payments</SelectItem>
           </SelectContent>
         </Select>
+        {/* Visibility */}
+        <DataTableViewOptions table={table} />
       </div>
 
-      <EnrollmentTable
+      <DataTable
+        table={table}
+        columns={EnrollmentColumns}
+        handleClick={handleClick}
+      />
+      {/* <EnrollmentTable
         students={filteredStudents}
         onEdit={handleEditStudent}
         onView={handleViewStudent}
         onDelete={handleDeleteStudent}
-      />
+      /> */}
     </>
   );
 }

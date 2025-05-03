@@ -87,21 +87,21 @@ func generateStudents(num int) []*store.Student {
 		}
 
 		students[i] = &store.Student{
-			FirstName:        firstNames[rand.Intn(len(firstNames))],
-			MiddleName:       middleNames[rand.Intn(len(middleNames))],
-			LastName:         lastNames[rand.Intn(len(lastNames))],
-			Suffix:           suffixes[rand.Intn(len(suffixes))],
-			Gender:           gender,
-			Birthdate:        birthdate,
-			Address:          addresses[rand.Intn(len(addresses))],
-			MotherName:       firstNames[rand.Intn(len(firstNames))] + " " + lastNames[rand.Intn(len(lastNames))],
-			MotherOccupation: occupations[rand.Intn(len(occupations))],
-			MotherEducAttain: educationLevels[rand.Intn(len(educationLevels))],
-			FatherName:       firstNames[rand.Intn(len(firstNames))] + " " + lastNames[rand.Intn(len(lastNames))],
-			FatherOccupation: occupations[rand.Intn(len(occupations))],
-			FatherEducAttain: educationLevels[rand.Intn(len(educationLevels))],
-			ContactNumbers:   contactNumbers,
-			LivingWith:       livingWiths[rand.Intn(len(livingWiths))],
+			FirstName:       firstNames[rand.Intn(len(firstNames))],
+			MiddleName:      middleNames[rand.Intn(len(middleNames))],
+			LastName:        lastNames[rand.Intn(len(lastNames))],
+			Suffix:          suffixes[rand.Intn(len(suffixes))],
+			Gender:          gender,
+			Birthdate:       birthdate,
+			Address:         addresses[rand.Intn(len(addresses))],
+			MotherName:      firstNames[rand.Intn(len(firstNames))] + " " + lastNames[rand.Intn(len(lastNames))],
+			MotherJob:       occupations[rand.Intn(len(occupations))],
+			MotherEducation: educationLevels[rand.Intn(len(educationLevels))],
+			FatherName:      firstNames[rand.Intn(len(firstNames))] + " " + lastNames[rand.Intn(len(lastNames))],
+			FatherJob:       occupations[rand.Intn(len(occupations))],
+			FatherEducation: educationLevels[rand.Intn(len(educationLevels))],
+			ContactNumbers:  contactNumbers,
+			LivingWith:      livingWiths[rand.Intn(len(livingWiths))],
 		}
 	}
 

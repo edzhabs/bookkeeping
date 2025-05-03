@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -231,10 +231,19 @@ export default function ViewStudentDetailsPage() {
           </Button>
           <h1 className="text-3xl font-bold">Student Details</h1>
         </div>
-        <Button onClick={handleEditStudent}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit Student
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleEditStudent}>
+            <Pencil className="mr-2 h-4 w-4" />
+            Edit Student
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => console.log("delete click")}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-6">

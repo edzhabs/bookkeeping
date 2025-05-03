@@ -167,225 +167,153 @@ export function EnrollmentTable({
 
   return (
     <>
-      <Tabs
-        value={activeTab}
-        onValueChange={(value) =>
-          setActiveTab(value as "students" | "activity")
-        }
-      >
-        <TabsList className="mb-4">
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="activity">Activity Log</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="students">
-          <div className="rounded-md border w-full overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead
-                    className="cursor-pointer"
-                    onClick={() => handleSortWithReset("name")}
-                  >
-                    Name {renderSortIcon("name")}
-                  </TableHead>
-                  <TableHead
-                    className="hidden md:table-cell cursor-pointer"
-                    onClick={() => handleSortWithReset("gender")}
-                  >
-                    Gender {renderSortIcon("gender")}
-                  </TableHead>
-                  <TableHead
-                    className="hidden md:table-cell cursor-pointer"
-                    onClick={() => handleSortWithReset("birthdate")}
-                  >
-                    Birthdate {renderSortIcon("birthdate")}
-                  </TableHead>
-                  <TableHead
-                    className="hidden md:table-cell cursor-pointer"
-                    onClick={() => handleSortWithReset("schoolYear")}
-                  >
-                    School Year {renderSortIcon("schoolYear")}
-                  </TableHead>
-                  <TableHead
-                    className="hidden md:table-cell cursor-pointer"
-                    onClick={() => handleSortWithReset("discount")}
-                  >
-                    Discount {renderSortIcon("discount")}
-                  </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedStudents.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No students found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedStudents.map((student) => (
-                    <TableRow key={student.id}>
-                      <TableCell className="font-medium">
-                        <button
+      <div className="rounded-md border w-full overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => handleSortWithReset("name")}
+              >
+                Name {renderSortIcon("name")}
+              </TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer"
+                onClick={() => handleSortWithReset("gender")}
+              >
+                Gender {renderSortIcon("gender")}
+              </TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer"
+                onClick={() => handleSortWithReset("birthdate")}
+              >
+                Birthdate {renderSortIcon("birthdate")}
+              </TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer"
+                onClick={() => handleSortWithReset("schoolYear")}
+              >
+                School Year {renderSortIcon("schoolYear")}
+              </TableHead>
+              <TableHead
+                className="hidden md:table-cell cursor-pointer"
+                onClick={() => handleSortWithReset("discount")}
+              >
+                Discount {renderSortIcon("discount")}
+              </TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedStudents.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  No students found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedStudents.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell className="font-medium">
+                    <button
+                      onClick={() => onView(student)}
+                      className="hover:underline text-left font-medium"
+                    >
+                      {student.firstName}{" "}
+                      {student.middleName
+                        ? student.middleName.charAt(0) + ". "
+                        : ""}
+                      {student.lastName} {student.suffix}
+                    </button>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {student.gender}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {new Date(student.birthdate).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {student.schoolYear}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {student.discount || "None"}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      {/* Desktop view buttons */}
+                      <div className="hidden sm:flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
                           onClick={() => onView(student)}
-                          className="hover:underline text-left font-medium"
                         >
-                          {student.firstName}{" "}
-                          {student.middleName
-                            ? student.middleName.charAt(0) + ". "
-                            : ""}
-                          {student.lastName} {student.suffix}
-                        </button>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {student.gender}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {new Date(student.birthdate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {student.schoolYear}
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">
-                        {student.discount || "None"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {/* Desktop view buttons */}
-                          <div className="hidden sm:flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => onView(student)}
-                            >
-                              <Eye className="h-4 w-4" />
-                              <span className="sr-only">View details</span>
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">View details</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => onEdit(student)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => handleDeleteClick(student)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+
+                      {/* Mobile view dropdown */}
+                      <div className="sm:hidden">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              Actions
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              onClick={() => onEdit(student)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="icon"
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => onView(student)}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onEdit(student)}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
                               onClick={() => handleDeleteClick(student)}
                             >
-                              <Trash2 className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                          {/* Mobile view dropdown */}
-                          <div className="sm:hidden">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  Actions
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => onView(student)}
-                                >
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => onEdit(student)}
-                                >
-                                  <Pencil className="mr-2 h-4 w-4" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteClick(student)}
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          <DataTablePagination
-            pageIndex={pageIndex}
-            pageSize={pageSize}
-            pageCount={pageCount}
-            totalItems={sortedStudents.length}
-            onPageChange={setPageIndex}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageIndex(0);
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="activity">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Activity Log</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date & Time</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Details</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredActivityLogs.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
-                        No activity logs found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredActivityLogs.map((log) => (
-                      <TableRow key={log.id}>
-                        <TableCell>
-                          {new Date(log.timestamp).toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              log.action === "Created"
-                                ? "default"
-                                : log.action === "Updated"
-                                ? "outline"
-                                : log.action === "Deleted"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {log.action}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{log.user}</TableCell>
-                        <TableCell>{log.details}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <DataTablePagination
+        pageIndex={pageIndex}
+        pageSize={pageSize}
+        pageCount={pageCount}
+        totalItems={sortedStudents.length}
+        onPageChange={setPageIndex}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPageIndex(0);
+        }}
+      />
 
       {selectedStudent && (
         <DeleteConfirmation
