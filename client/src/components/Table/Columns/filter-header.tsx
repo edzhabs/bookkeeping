@@ -48,7 +48,7 @@ export function DataTableColumnFilter<TData, TValue>({
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-3 h-8 data-[state=open]:bg-accent"
+            className="-ml-3 h-8 data-[state=open]:bg-accent cursor-pointer"
           >
             <span>{title}</span>
             <Filter className="ml-2 h-4 w-4" />

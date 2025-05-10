@@ -14,12 +14,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import DemoLoading from "@/components/demo-loading";
 
 export default function DashboardPage() {
   return (
     <div className="container py-8 w-full max-w-full px-4 md:px-6 lg:px-8">
       <h1 className="mb-6 text-3xl font-bold">Dashboard</h1>
-
+      <DemoLoading />
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link to="/enrollment" className="transition-transform hover:scale-105">
           <Card>

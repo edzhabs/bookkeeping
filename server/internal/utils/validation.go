@@ -19,6 +19,7 @@ func init() {
 	Validate.RegisterValidation("schoolyear", validateSchoolYear)
 	Validate.RegisterValidation("discounts", validateDiscounts)
 	Validate.RegisterValidation("decimalGt", validateDecimalGTZero)
+	Validate.RegisterValidation("sortfq", sortValidation)
 }
 
 func trimmedSpace(fl validator.FieldLevel) bool {
@@ -83,9 +84,13 @@ func validateDiscounts(fl validator.FieldLevel) bool {
 		"sibling":   true,
 		"full_year": true,
 		"scholar":   true,
+		"carpool":   true,
 	}
 
-	discounts := fl.Field().Interface().([]string)
+	discounts, ok := fl.Field().Interface().([]string)
+	if !ok || discounts == nil {
+		return true // Allow empty or nil discounts
+	}
 	seen := make(map[string]bool)
 
 	for _, d := range discounts {
@@ -95,11 +100,12 @@ func validateDiscounts(fl validator.FieldLevel) bool {
 		seen[d] = true
 	}
 
-	if seen["scholar"] && len(discounts) > 1 {
+	// Ensure "scholar", "sibling", and "full_year" cannot coexist
+	if (seen["scholar"] && seen["sibling"]) || (seen["scholar"] && seen["full_year"]) || (seen["sibling"] && seen["full_year"]) {
 		return false
 	}
 
-	if seen["full_year"] && seen["sibling"] {
+	if seen["carpool"] && len(discounts) > 1 {
 		return false
 	}
 
@@ -120,4 +126,11 @@ func validateDecimalGTZero(fl validator.FieldLevel) bool {
 		return false // Ensure the field is of type decimal.Decimal
 	}
 	return value.GreaterThan(decimal.Zero) // Check if the value is greater than 0
+}
+
+func sortValidation(fl validator.FieldLevel) bool {
+	sortValue := fl.Field().String()
+	sortValue = strings.ToUpper(sortValue)
+	return sortValue == "ASC" || sortValue == "DESC"
+
 }

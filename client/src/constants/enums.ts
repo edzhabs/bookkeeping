@@ -12,7 +12,8 @@ export enum PaymentMethod {
 export enum GradeLevel {
   Nursery1 = "Nursery 1",
   Nursery2 = "Nursery 2",
-  Kindergarten = "Kindergarten",
+  Kinder1 = "Kinder 1",
+  Kinder2 = "Kinder 2",
   Grade1 = "Grade 1",
   Grade2 = "Grade 2",
   Grade3 = "Grade 3",

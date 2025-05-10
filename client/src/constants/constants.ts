@@ -3,17 +3,18 @@ const CONSTANTS = {
   STALETIME: 60 * 1000, // 1min
   RETRY: 3,
   GENDER: ["Male", "Female"],
-  PAYMENTMETHOD: ["Cash", "GCash", "Bank"],
-  GRADELEVEL: [
-    "Nursery 1",
-    "Nursery 2",
-    "Kindergarten",
-    "Grade 1",
-    "Grade 2",
-    "Grade 3",
-    "Grade 4",
-    "Grade 5",
-    "Grade 6",
+  PAYMENTMETHODS: ["Cash", "GCash", "Bank"],
+  GRADELEVELS: [
+    "nursery-1",
+    "nursery-2",
+    "kinder-1",
+    "kinder-2",
+    "grade-1",
+    "grade-2",
+    "grade-3",
+    "grade-4",
+    "grade-5",
+    "grade-6",
   ],
 };
 

@@ -3,6 +3,8 @@ CREATE TABLE enrollments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id),
     school_year VARCHAR(20) NOT NULL,
+    grade_level VARCHAR(20) NOT NULL CHECK (grade_level IN ('nursery-1', 'nursery-2', 'kinder-1', 'kinder-2', 'grade-1', 'grade-2', 'grade-3', 'grade-4', 'grade-5', 'grade-6')),
+    type VARCHAR(10) NOT NULL CHECK (type IN ('new', 'old')),
     monthly_tuition NUMERIC(10,2) NOT NULL,
     months INTEGER NOT NULL DEFAULT 10,
     enrollment_fee NUMERIC(10,2) NOT NULL,
@@ -20,6 +22,7 @@ CREATE TABLE discounts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     enrollment_id UUID NOT NULL REFERENCES enrollments(id),
     type VARCHAR(10) NOT NULL CHECK (type IN ('rank_1', 'sibling', 'full_year', 'scholar', 'carpool')),
+    scope TEXT NOT NULL CHECK (scope IN ('tuition', 'lms_books', 'carpool')),
     amount NUMERIC(10,2),
     created_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
@@ -30,41 +33,40 @@ CREATE TABLE discounts (
 CREATE OR REPLACE FUNCTION validate_discount_rules()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.type IN ('sibling', 'full_year', 'rank_1') THEN
+    -- Ensure carpool is alone
+    IF NEW.type = 'carpool' THEN
         IF EXISTS (
             SELECT 1 FROM discounts d
             WHERE d.enrollment_id = NEW.enrollment_id
-              AND d.type = 'scholar'
+              AND d.type != 'carpool'
               AND d.deleted_at IS NULL
         ) THEN
-            RAISE EXCEPTION 'Cannot apply tuition-related discount (%) when scholar discount exists.', NEW.type;
+            RAISE EXCEPTION 'Cannot combine carpool discount with other discounts.';
         END IF;
-        
+    ELSE
+        -- Ensure sibling, full_year, and scholar cannot coexist
         IF (NEW.type = 'sibling' AND EXISTS (
             SELECT 1 FROM discounts d
             WHERE d.enrollment_id = NEW.enrollment_id
-              AND d.type = 'full_year'
+              AND d.type IN ('full_year', 'scholar')
               AND d.deleted_at IS NULL
         )) OR
            (NEW.type = 'full_year' AND EXISTS (
             SELECT 1 FROM discounts d
             WHERE d.enrollment_id = NEW.enrollment_id
-              AND d.type = 'sibling'
+              AND d.type IN ('sibling', 'scholar')
               AND d.deleted_at IS NULL
-        )) THEN
-            RAISE EXCEPTION 'Cannot combine sibling and full year tuition discount.';
-        END IF;
-    ELSIF NEW.type = 'scholar' THEN
-        IF EXISTS (
+        )) OR
+           (NEW.type = 'scholar' AND EXISTS (
             SELECT 1 FROM discounts d
             WHERE d.enrollment_id = NEW.enrollment_id
-              AND d.type IN ('sibling', 'full_year', 'rank_1')
+              AND d.type IN ('sibling', 'full_year')
               AND d.deleted_at IS NULL
-        ) THEN
-            RAISE EXCEPTION 'Cannot apply scholar with other tuition-related discounts.';
+        )) THEN
+            RAISE EXCEPTION 'Cannot combine sibling, full_year, and scholar tuition discounts.';
         END IF;
     END IF;
-    
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;

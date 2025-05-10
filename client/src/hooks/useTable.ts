@@ -15,12 +15,14 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 
 function useTable<TData>(
   columns: ColumnDef<TData, unknown>[],
+  visibleColumns: Record<string, boolean>,
   data: TData[] | undefined
 ) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState<string>("");
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [columnVisibility, setColumnVisibility] =
+    useState<VisibilityState>(visibleColumns);
 
   const tableConfig = useMemo(
     () => ({

@@ -1,8 +1,11 @@
 import { LucidePlus, LucideSearch } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 
+import { DataTable } from "@/components/custom-table";
+import { DebouncedInput } from "@/components/DebouncedInput";
+import { DataTableViewOptions } from "@/components/Table/Columns/column-options";
+import { EnrollmentColumns } from "@/components/Table/Columns/enrollment-column";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -12,47 +15,76 @@ import {
 } from "@/components/ui/select";
 import { NAVTITLE } from "@/constants/side-menu";
 import { HeaderContext } from "@/context/headerContext";
-import { useNavigate } from "react-router-dom";
-import { DataTable } from "@/components/custom-table";
 import useTable from "@/hooks/useTable";
-import { EnrollmentColumns } from "@/components/Table/Columns/enrollment-column";
-import { Enrollment } from "@/types/enrollment";
-import { DataTableViewOptions } from "@/components/Table/Columns/column-options";
+import { EnrollmentTable } from "@/types/enrollment";
 import { useQuery } from "@tanstack/react-query";
-import axiosClient from "@/services/api-client";
+import { useNavigate } from "react-router-dom";
+import { fetchEnrollment } from "@/services/enrollments";
 
-const fetchEnrollment = async (searchQuery: string) => {
-  try {
-    const response = await axiosClient.get("/enrollment.json", {
-      params: { searchQuery: searchQuery },
-    });
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching enrollment data", error);
-    throw error;
-  }
+const visibleColumns = {
+  full_name: true,
+  Type: false,
+  gender: false,
+  grade_level: true,
+  school_year: true,
+  discount: false,
+  total_amount: true,
+  remaining_amount: true,
+  payment_status: true,
 };
 
 export default function EnrollmentPage() {
   const header = useContext(HeaderContext);
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"All" | "Tuition" | "Carpool">(
-    "All"
-  );
 
-  const { data } = useQuery({
-    queryKey: ["enrollment", searchQuery],
-    queryFn: () => fetchEnrollment(searchQuery),
+  const [schoolYears, setSchoolYears] = useState<string[]>([]);
+  const [schoolYear, setSchoolYear] = useState("All");
+
+  const { data: enrollments } = useQuery<{
+    data: EnrollmentTable[] | undefined;
+  }>({
+    queryKey: ["enrollment"],
+    queryFn: fetchEnrollment,
   });
 
   useEffect(() => {
     header.setHeaderTitle(NAVTITLE.ENROLLMENTS.title);
   }, [header]);
 
-  const { table } = useTable<Enrollment>(EnrollmentColumns, data);
+  useEffect(() => {
+    if (enrollments?.data && schoolYears.length === 0) {
+      const distinctYears = Array.from(
+        new Set(enrollments?.data.map((e) => e.school_year))
+      );
+      setSchoolYears(distinctYears);
+    }
+  }, [enrollments, schoolYears]);
+
+  const columns = useMemo(
+    () => EnrollmentColumns(enrollments?.data || []),
+    [enrollments?.data]
+  );
+
+  const { table } = useTable<EnrollmentTable>(
+    columns,
+    visibleColumns,
+    enrollments?.data
+  );
   const handleClick = (id: string) => {
     navigate("/enrollment/" + id);
+  };
+
+  const handleSchoolYear = (value: string) => {
+    setSchoolYear(value);
+    if (value === "All") {
+      table.getColumn("school_year")?.setFilterValue("");
+    } else {
+      table.getColumn("school_year")?.setFilterValue(value);
+    }
+  };
+
+  const handleSearch = (value: string) => {
+    table.getColumn("full_name")?.setFilterValue(value);
   };
 
   return (
@@ -68,46 +100,34 @@ export default function EnrollmentPage() {
         {/* Search Input */}
         <div className="relative w-full sm:w-[300px]">
           <LucideSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
-          <Input
+          <DebouncedInput
             type="text"
-            placeholder="Search students..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={table.getColumn("full_name")?.getFilterValue() as string}
+            placeholder="Search name.."
+            onChange={handleSearch}
             className="w-full pl-10"
           />
         </div>
 
         {/* Filter Dropdown */}
-        <Select
-          value={filterType}
-          onValueChange={(value) =>
-            setFilterType(value as "All" | "Tuition" | "Carpool")
-          }
-        >
+        <Select value={schoolYear} onValueChange={handleSchoolYear}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="All">All Transactions</SelectItem>
-            <SelectItem value="Tuition">Tuition Payments</SelectItem>
-            <SelectItem value="Carpool">Carpool Payments</SelectItem>
+            <SelectItem value="All">All School Years</SelectItem>
+            {schoolYears.map((year, index) => (
+              <SelectItem key={index} value={year}>
+                {year}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         {/* Visibility */}
         <DataTableViewOptions table={table} />
       </div>
 
-      <DataTable
-        table={table}
-        columns={EnrollmentColumns}
-        handleClick={handleClick}
-      />
-      {/* <EnrollmentTable
-        students={filteredStudents}
-        onEdit={handleEditStudent}
-        onView={handleViewStudent}
-        onDelete={handleDeleteStudent}
-      /> */}
+      <DataTable table={table} handleClick={handleClick} />
     </>
   );
 }

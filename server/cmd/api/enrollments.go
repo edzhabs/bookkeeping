@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edzhabs/bookkeeping/internal/constants"
+	"github.com/edzhabs/bookkeeping/internal/models"
 	"github.com/edzhabs/bookkeeping/internal/store"
 	"github.com/edzhabs/bookkeeping/internal/utils"
 	"github.com/shopspring/decimal"
@@ -17,7 +19,9 @@ const (
 type CreateEnrollmentPayload struct {
 	Student        Student         `json:"student"`
 	SchoolYear     string          `json:"school_year" validate:"required,schoolyear"`
+	GradeLevel     string          `json:"grade_level" validate:"oneofci=nursery-1 nursery-2 kinder-1 kinder-2 grade-1 grade-2 grade-3 grade-4 grade-5 grade-6"`
 	MonthlyTuition decimal.Decimal `json:"monthly_tuition" validate:"required,decimalGt"`
+	Type           string          `json:"type" validate:"oneofci=new old"`
 	EnrollmentFee  decimal.Decimal `json:"enrollment_fee" validate:"required,decimalGt"`
 	MiscFee        decimal.Decimal `json:"misc_fee" validate:"required,decimalGt"`
 	PtaFee         decimal.Decimal `json:"pta_fee" validate:"required,decimalGt"`
@@ -62,7 +66,7 @@ func (app *application) createEnrollmentHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// TODO: auth to add user log to know who created this
-	student := &store.Student{
+	student := &models.Student{
 		FirstName:       payload.Student.FirstName,
 		MiddleName:      payload.Student.MiddleName,
 		LastName:        payload.Student.LastName,
@@ -80,27 +84,27 @@ func (app *application) createEnrollmentHandler(w http.ResponseWriter, r *http.R
 		LivingWith:      payload.Student.LivingWith,
 	}
 
-	var discounts []*store.Discount
+	var discounts []*models.Discount
 	if len(payload.AvailDiscounts) > 0 {
 		for _, d := range payload.AvailDiscounts {
-			discount := &store.Discount{}
+			discount := &models.Discount{}
 			total_tuition := payload.MonthlyTuition.Mul(decimal.NewFromInt(enrollment_months))
-			switch d {
-			case "rank_1":
-				discount.Type = "rank_1"
+			switch strings.ToLower(d) {
+			case constants.Rank_1:
+				discount.Type = constants.Rank_1
 				discount.Amount = payload.LmsFee
 				discounts = append(discounts, discount)
-			case "sibling":
-				discount.Type = "sibling"
+			case constants.Sibling:
+				discount.Type = constants.Sibling
 				discount.Amount = total_tuition.Mul(decimal.NewFromFloat(0.05))
 				discounts = append(discounts, discount)
-			case "full_year":
-				discount.Type = "full_year"
+			case constants.FullYear:
+				discount.Type = constants.FullYear
 				discount.Amount = payload.MonthlyTuition
-			case "scholar":
-				discount.Type = "scholar"
-				total_fees := payload.EnrollmentFee.Add(payload.MiscFee).Add(payload.PtaFee).Add(payload.LmsFee)
-				discount.Amount = total_tuition.Add(total_fees)
+				discounts = append(discounts, discount)
+			case constants.Scholar:
+				discount.Type = constants.Scholar
+				discount.Amount = total_tuition.Mul(decimal.NewFromFloat(0.5))
 				discounts = append(discounts, discount)
 			default:
 				continue
@@ -109,9 +113,11 @@ func (app *application) createEnrollmentHandler(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	enrollment := &store.Enrollment{
+	enrollment := &models.Enrollment{
 		Student:        student,
 		SchoolYear:     payload.SchoolYear,
+		GradeLevel:     strings.ToLower(payload.GradeLevel),
+		Type:           strings.ToLower(payload.Type),
 		MonthlyTuition: payload.MonthlyTuition,
 		EnrollmentFee:  payload.EnrollmentFee,
 		MiscFee:        payload.MiscFee,
@@ -133,6 +139,20 @@ func (app *application) createEnrollmentHandler(w http.ResponseWriter, r *http.R
 	}
 
 	if err := utils.ResponseJSON(w, http.StatusCreated, enrollment); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) getEnrollmentsHandler(w http.ResponseWriter, r *http.Request) {
+
+	enrollments, err := app.store.Enrollments.GetAll(r.Context())
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := utils.ResponseJSON(w, http.StatusOK, enrollments); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

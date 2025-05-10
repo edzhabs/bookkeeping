@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/edzhabs/bookkeeping/internal/models"
 	"github.com/lib/pq"
 )
 
@@ -19,11 +20,12 @@ var (
 
 type Storage struct {
 	Students interface {
-		Create(ctx context.Context, student *Student) error
+		Create(ctx context.Context, student *models.Student) error
 		GetAll(ctx context.Context) ([]StudentWithAge, error)
 	}
 	Enrollments interface {
-		Create(ctx context.Context, enrollment *Enrollment) error
+		Create(ctx context.Context, enrollment *models.Enrollment) error
+		GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error)
 	}
 }
 

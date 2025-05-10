@@ -6,33 +6,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ColumnDef,
-  flexRender,
-  Table as ReactTable,
-} from "@tanstack/react-table";
+import { flexRender, Table as ReactTable } from "@tanstack/react-table";
 import { DataTablePagination } from "./Table/Columns/pagination";
+import clsx from "clsx";
 
-interface DataTableProps<TData extends { id: string }, TValue> {
+interface DataTableProps<TData extends { id: string }> {
   table: ReactTable<TData>;
-  columns: ColumnDef<TData, TValue>[];
   handleClick: (id: string) => void;
 }
 
-export function DataTable<TData extends { id: string }, TValue>({
+export function DataTable<TData extends { id: string }>({
   table,
-  columns,
   handleClick,
-}: DataTableProps<TData, TValue>) {
+}: DataTableProps<TData>) {
   return (
     <>
-      <div className="rounded-md border w-full overflow-x-auto">
+      <div className="rounded-md border shadow-sm w-full overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow
+                key={headerGroup.id}
+                className="hover:bg-slate-100 border-b border-slate-200"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    className="bg-slate-50 font-semibold text-slate-700"
+                  >
                     {header.isPlaceholder ? null : (
                       <div>
                         {flexRender(
@@ -48,16 +49,22 @@ export function DataTable<TData extends { id: string }, TValue>({
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
+              table.getRowModel().rows.map((row, index) => (
                 <TableRow
                   key={row.id}
-                  className="cursor-pointer"
+                  className={`
+                    ${index % 2 === 0 ? "bg-white" : "bg-slate-50"} 
+                    cursor-pointer hover:bg-slate-100 transition-colors
+                    border-b border-slate-200 last:border-0
+                  `}
                   onClick={() => handleClick(row.original.id)}
                 >
                   {row.getVisibleCells().map((cell, index) => (
                     <TableCell
                       key={cell.id}
-                      className={index === 0 ? "font-medium" : ""}
+                      className={clsx("py-4", {
+                        "font-medium hover:underline text-left": index === 0,
+                      })}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -70,7 +77,7 @@ export function DataTable<TData extends { id: string }, TValue>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
                   No records found.

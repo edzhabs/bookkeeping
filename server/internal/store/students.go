@@ -17,7 +17,7 @@ type StudentStore struct {
 	db *sql.DB
 }
 
-func (s *StudentStore) Create(ctx context.Context, student *Student) error {
+func (s *StudentStore) Create(ctx context.Context, student *models.Student) error {
 	query := `
 		INSERT INTO students 
 			(first_name, middle_name, last_name, suffix, gender, birthdate, address,

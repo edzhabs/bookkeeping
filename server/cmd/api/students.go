@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/edzhabs/bookkeeping/internal/models"
 	"github.com/edzhabs/bookkeeping/internal/store"
 	"github.com/edzhabs/bookkeeping/internal/utils"
 )
@@ -36,7 +37,7 @@ func (app *application) createStudentHandler(w http.ResponseWriter, r *http.Requ
 
 	// TODO: auth to add user log to know who created this
 
-	student := &store.Student{
+	student := &models.Student{
 		FirstName:       strings.ToUpper(payload.FirstName),
 		MiddleName:      strings.ToUpper(payload.MiddleName),
 		LastName:        strings.ToUpper(payload.LastName),

@@ -17,3 +17,12 @@ export const formatBirthDate = (dateString: string) => {
 export const getInitials = (firstName: string, lastName: string) => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`;
 };
+
+export const formatToCurrency = (value: number | string) => {
+  const number = typeof value === "string" ? parseFloat(value) : value;
+  return new Intl.NumberFormat("en-PH", {
+    style: "currency",
+    currency: "PHP",
+    minimumFractionDigits: 2,
+  }).format(number);
+};
