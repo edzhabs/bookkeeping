@@ -20,6 +20,7 @@ import { EnrollmentTable } from "@/types/enrollment";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchEnrollment } from "@/services/enrollments";
+import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
 
 const visibleColumns = {
   full_name: true,
@@ -39,6 +40,8 @@ export default function EnrollmentPage() {
 
   const [schoolYears, setSchoolYears] = useState<string[]>([]);
   const [schoolYear, setSchoolYear] = useState("All");
+  const [isEnrollmentTypeModalOpen, setIsEnrollmentTypeModalOpen] =
+    useState(false);
 
   const { data: enrollments } = useQuery<{
     data: EnrollmentTable[] | undefined;
@@ -70,6 +73,7 @@ export default function EnrollmentPage() {
     visibleColumns,
     enrollments?.data
   );
+
   const handleClick = (id: string) => {
     navigate("/enrollment/" + id);
   };
@@ -90,12 +94,17 @@ export default function EnrollmentPage() {
   return (
     <>
       <Button
-        className="w-full sm:w-[180px]"
-        onClick={() => navigate(NAVTITLE.ENROLL_STUDENT.url)}
+        className="w-full sm:w-[180px] cursor-pointer"
+        onClick={() => setIsEnrollmentTypeModalOpen(true)}
       >
         <LucidePlus className="mr-2 h-4 w-4" />
         Enroll Student
       </Button>
+      <EnrollmentTypeModal
+        isOpen={isEnrollmentTypeModalOpen}
+        onClose={() => setIsEnrollmentTypeModalOpen(false)}
+      />
+
       <div className="mb-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
         {/* Search Input */}
         <div className="relative w-full sm:w-[300px]">

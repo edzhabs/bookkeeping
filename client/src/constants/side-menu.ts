@@ -24,7 +24,11 @@ export const NAVTITLE = {
     url: "/dashboard",
   },
   ENROLLMENTS: { title: "Student Enrollment", url: "/enrollment" },
-  ENROLL_STUDENT: { title: "Enroll Student", url: "/enrollment/new" },
+  ENROLL_NEW_STUDENT: { title: "Enroll New Student", url: "/enrollment/new" },
+  ENROLL_OLD_STUDENT: {
+    title: "Enroll Existing Student",
+    url: "/enrollment/existing",
+  },
   VIEW_STUDENT_DETAILS: { title: "Student Details", url: "/enrollment/:id" },
   EDIT_STUDENT_DETAILS: {
     title: "Edit Student Details",

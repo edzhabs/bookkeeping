@@ -11,13 +11,14 @@ import SchoolExpensePage from "./pages/SchoolExpensePage";
 import CarpoolExpensePage from "./pages/CarpoolExpensePage";
 import EnrollmentPage from "./pages/Enrollment/EnrollmentPage";
 import TransactionsPage from "./pages/Transaction/TransactionPage";
-import EnrollStudentPage from "./pages/Enrollment/EnrollStudentPage";
 import ViewStudentDetailsPage from "./pages/Enrollment/Details/ViewStudentPageDetails";
 import EditStudentDetailsPage from "./pages/Enrollment/Details/EditStudentPageDetails";
 import TuitionDetailsPage from "./pages/Tuition/ViewTuitionPage";
 import TransactionDetailsPage from "./pages/Transaction/TransactionDetailsPage";
 import ArchivePage from "./pages/Archive/ArchivePage";
 import ArchiveDetailsPage from "./pages/Archive/ArchiveDetailsPage";
+import NewEnrollmentPage from "./pages/Enrollment/EnrollNewStudentPage";
+import OldEnrollmentPage from "./pages/Enrollment/EnrollOldStudentPage";
 
 const router = createBrowserRouter([
   {
@@ -39,8 +40,12 @@ const router = createBrowserRouter([
         element: <EnrollmentPage />,
       },
       {
-        path: NAVTITLE.ENROLL_STUDENT.url,
-        element: <EnrollStudentPage />,
+        path: NAVTITLE.ENROLL_NEW_STUDENT.url,
+        element: <NewEnrollmentPage />,
+      },
+      {
+        path: NAVTITLE.ENROLL_OLD_STUDENT.url,
+        element: <OldEnrollmentPage />,
       },
       {
         path: NAVTITLE.VIEW_STUDENT_DETAILS.url,

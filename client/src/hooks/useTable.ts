@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   Row,
   SortingState,
   VisibilityState,

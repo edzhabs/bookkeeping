@@ -318,11 +318,7 @@ export default function NewEnrollmentPage() {
   return (
     <div className="container py-8">
       <div className="mb-6 flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => navigate("/enrollment")}
-        >
+        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <h1 className="text-3xl font-bold">New Enrollment</h1>

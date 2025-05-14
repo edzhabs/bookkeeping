@@ -13,68 +13,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchStudentDetails } from "@/services/students";
 import type { ActivityLogItem } from "@/types/activity-log";
 import { StudentEnrollmentDetails } from "@/types/enrollment";
-import type { Student } from "@/types/student";
 import type { Tuition } from "@/types/tuition";
-import { displayDiscounts, formatBirthDate, formatDiscount } from "@/utils";
+import { displayDiscounts, formatBirthDate } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-// Sample tuition data
-const initialTuitions: Tuition[] = [
-  {
-    id: "1",
-    studentId: "1",
-    studentName: "John Doe",
-    gradeLevel: "Grade 10",
-    discount: "None",
-    discountAmount: 0,
-    schoolYear: "2023-2024",
-    totalAmount: 50000,
-    remainingBalance: 0,
-    dueDate: "2023-09-15",
-    status: "Paid",
-    payments: [
-      {
-        id: "p1",
-        invoiceNumber: "TUI-2023-001",
-        amount: 25000,
-        date: "2023-07-10",
-        method: "Bank Transfer",
-        notes: "First semester payment",
-        reservationFee: 5000,
-        tuitionFee: 20000,
-        advancePayment: 0,
-      },
-      {
-        id: "p2",
-        invoiceNumber: "TUI-2023-015",
-        amount: 25000,
-        date: "2023-11-05",
-        method: "Credit Card",
-        notes: "Second semester payment",
-        reservationFee: 0,
-        tuitionFee: 25000,
-        advancePayment: 0,
-      },
-    ],
-  },
-  {
-    id: "2",
-    studentId: "2",
-    studentName: "Emma Smith",
-    gradeLevel: "Grade 8",
-    discount: "Sibling Discount",
-    discountAmount: 5000,
-    schoolYear: "2023-2024",
-    totalAmount: 45000,
-    remainingBalance: 45000,
-    dueDate: "2023-09-15",
-    status: "Unpaid",
-    payments: [],
-  },
-];
 
 // Sample activity logs
 const sampleActivityLogs: ActivityLogItem[] = [
