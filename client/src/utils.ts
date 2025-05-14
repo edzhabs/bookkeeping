@@ -26,3 +26,24 @@ export const formatToCurrency = (value: number | string) => {
     minimumFractionDigits: 2,
   }).format(number);
 };
+
+export const displayDiscounts = (discounts: string[]) => {
+  if (discounts.length <= 0) return "None";
+  const labels: string[] = [];
+  discounts.map((discount) => {
+    if (discount === "rank_1") {
+      labels.push("Quipper/Books");
+    }
+    if (discount === "sibling") {
+      labels.push("Siblings");
+    }
+    if (discount === "full_year") {
+      labels.push("Full Payment");
+    }
+    if (discount === "scholar") {
+      labels.push("Scholar");
+    }
+  });
+
+  return labels.join(", ");
+};

@@ -71,3 +71,16 @@ type EnrollmentsTableData struct {
 	RemainingAmount decimal.Decimal `json:"remaining_amount"`
 	PaymentStatus   string          `json:"payment_status"`
 }
+
+type EnrollmentStudentDetails struct {
+	ID              uuid.UUID       `json:"id"`
+	Type            string          `json:"type"`
+	GradeLevel      string          `json:"grade_level"`
+	SchoolYear      string          `json:"school_year"`
+	DiscountTypes   []string        `json:"discount_types"`
+	TotalAmount     decimal.Decimal `json:"total_amount"`
+	TotalPaid       decimal.Decimal `json:"total_paid"`
+	RemainingAmount decimal.Decimal `json:"remaining_amount"`
+	PaymentStatus   string          `json:"payment_status"`
+	Student         *Student        `json:"student"`
+}

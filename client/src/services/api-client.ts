@@ -1,5 +1,9 @@
 import axios from "axios";
 
+export interface FetchResponse<T> {
+  data: T[];
+}
+
 const axiosClient = axios.create({
   baseURL: "http://localhost:8080/api",
   // baseURL: "http://localhost:5173/test_data",

@@ -185,7 +185,7 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 
 		ctx := r.Context()
 
-		student, err := app.store.Enrollments.GetStudentByID(ctx, id)
+		enrollment, err := app.store.Enrollments.GetStudentByID(ctx, id)
 		if err != nil {
 			switch err {
 			case store.ErrNotFound:
@@ -196,12 +196,12 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 			return
 		}
 
-		ctx = context.WithValue(ctx, enrollmentCtx, student)
+		ctx = context.WithValue(ctx, enrollmentCtx, enrollment)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func (app *application) getStudentFromCtx(r *http.Request) models.Student {
-	student, _ := r.Context().Value(enrollmentCtx).(models.Student)
-	return student
+func (app *application) getStudentFromCtx(r *http.Request) models.EnrollmentStudentDetails {
+	enrollment, _ := r.Context().Value(enrollmentCtx).(models.EnrollmentStudentDetails)
+	return enrollment
 }

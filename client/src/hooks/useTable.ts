@@ -23,6 +23,10 @@ function useTable<TData>(
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] =
     useState<VisibilityState>(visibleColumns);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const tableConfig = useMemo(
     () => ({
@@ -36,11 +40,14 @@ function useTable<TData>(
       onGlobalFilterChange: setGlobalFilter,
       onColumnFiltersChange: setColumnFilters,
       onColumnVisibilityChange: setColumnVisibility,
+      onPaginationChange: setPagination,
+      autoResetPageIndex: false,
       state: {
         sorting,
         globalFilter,
         columnFilters,
         columnVisibility,
+        pagination,
       },
       globalFilterFn: (
         row: Row<TData>,
@@ -57,7 +64,15 @@ function useTable<TData>(
         ).passed;
       },
     }),
-    [data, columns, sorting, columnFilters, columnVisibility, globalFilter]
+    [
+      data,
+      columns,
+      sorting,
+      columnFilters,
+      columnVisibility,
+      globalFilter,
+      pagination,
+    ]
   );
 
   const table = useReactTable<TData>(tableConfig);

@@ -1,6 +1,6 @@
 export interface Student {
   id: string;
-  fist_name: string;
+  first_name: string;
   middle_name: string;
   last_name: string;
   suffix: string;
@@ -8,17 +8,12 @@ export interface Student {
   gender: string;
   birthdate: string;
   living_with: string;
+  address: string;
   contactNumbers: string[];
-  parents: {
-    father?: {
-      name: string;
-      job: string;
-      educationAttainment: string;
-    };
-    mother?: {
-      name: string;
-      job: string;
-      educationAttainment: string;
-    };
-  };
+  mother_name: string;
+  mother_job: string;
+  mother_education: string;
+  father_name: string;
+  father_job: string;
+  father_education: string;
 }

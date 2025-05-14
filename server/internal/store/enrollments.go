@@ -16,9 +16,10 @@ type EnrollmentStore struct {
 	db *sql.DB
 }
 
-func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (models.Student, error) {
+func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error) {
 	query := `
 		SELECT
+	  e.id,
 	  s.id,
 	  s.first_name,
 	  s.middle_name,
@@ -44,50 +45,86 @@ func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (mod
 	  s.father_job,
 	  s.father_education,
 	  s.living_with,
-	  s.contact_numbers
-    FROM students s
-    LEFT JOIN enrollments e ON e.student_id = s.id AND s.deleted_at IS NULL
+	  s.contact_numbers,
+	  e.type,
+	  e.grade_level,
+	  e.school_year,
+	  COALESCE(array_agg(DISTINCT d.type) FILTER (WHERE d.type IS NOT NULL), ARRAY[]::text[]) AS discount_types,
+      (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
+         - COALESCE(SUM(d.amount), 0)) AS total_amount,
+	  COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) AS total_paid,
+	  (
+	 	(e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee)
+		- COALESCE(SUM(d.amount), 0)
+		- COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) 
+	  ) AS remaining_amount,
+	  CASE
+	  	WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) = 0
+			THEN 'unpaid'
+		WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) >=
+			   (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0))
+			THEN 'paid'
+		ELSE 'partial'
+	  END AS payment_status
+    FROM enrollments e
+    LEFT JOIN discounts d ON d.enrollment_id = e.id AND d.deleted_at IS NULL
+	LEFT JOIN tuition_payments tp ON tp.enrollment_id = e.id AND tp.deleted_at IS NULL
+    LEFT JOIN students s ON s.id = e.student_id AND s.deleted_at IS NULL
     WHERE e.deleted_at IS NULL AND e.id = $1
+	GROUP BY e.id, s.id, s.first_name, s.middle_name, s.last_name, s.suffix, e.type, e.school_year, e.grade_level,
+	  s.gender, s.birthdate, s.address, s.mother_name, s.mother_job, s.mother_education, s.father_name, s.father_job,
+	  s.father_education, s.living_with, s.contact_numbers, e.monthly_tuition, e.months, e.enrollment_fee, e.misc_fee,
+	  e.pta_fee, e.lms_books_fee
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
 	defer cancel()
 
-	var student models.Student
+	var enrollment models.EnrollmentStudentDetails
+	enrollment.Student = new(models.Student)
 
 	err := s.db.QueryRowContext(
 		ctx,
 		query,
 		id,
 	).Scan(
-		&student.ID,
-		&student.FirstName,
-		&student.MiddleName,
-		&student.LastName,
-		&student.Suffix,
-		&student.FullName,
-		&student.Gender,
-		&student.Birthdate,
-		&student.Address,
-		&student.MotherName,
-		&student.MotherJob,
-		&student.MotherEducation,
-		&student.FatherName,
-		&student.FatherJob,
-		&student.FatherEducation,
-		&student.LivingWith,
-		pq.Array(&student.ContactNumbers),
+		&enrollment.ID,
+		&enrollment.Student.ID,
+		&enrollment.Student.FirstName,
+		&enrollment.Student.MiddleName,
+		&enrollment.Student.LastName,
+		&enrollment.Student.Suffix,
+		&enrollment.Student.FullName,
+		&enrollment.Student.Gender,
+		&enrollment.Student.Birthdate,
+		&enrollment.Student.Address,
+		&enrollment.Student.MotherName,
+		&enrollment.Student.MotherJob,
+		&enrollment.Student.MotherEducation,
+		&enrollment.Student.FatherName,
+		&enrollment.Student.FatherJob,
+		&enrollment.Student.FatherEducation,
+		&enrollment.Student.LivingWith,
+		pq.Array(&enrollment.Student.ContactNumbers),
+		&enrollment.Type,
+		&enrollment.GradeLevel,
+		&enrollment.SchoolYear,
+		pq.Array(&enrollment.DiscountTypes),
+		&enrollment.TotalAmount,
+		&enrollment.TotalPaid,
+		&enrollment.RemainingAmount,
+		&enrollment.PaymentStatus,
 	)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
-			return student, ErrNotFound
+			return enrollment, ErrNotFound
 		default:
-			return student, err
+			return enrollment, err
 		}
 	}
 
-	return student, nil
+	return enrollment, nil
 }
 
 func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error) {

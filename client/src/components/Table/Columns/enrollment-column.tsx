@@ -2,7 +2,11 @@ import { DataTableColumnHeader } from "@/components/Table/Columns/column-header"
 import { DataTableColumnFilter } from "@/components/Table/Columns/filter-header";
 import { Badge } from "@/components/ui/badge";
 import { EnrollmentTable } from "@/types/enrollment";
-import { capitalFirstLetter, formatToCurrency } from "@/utils";
+import {
+  capitalFirstLetter,
+  displayDiscounts,
+  formatToCurrency,
+} from "@/utils";
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
 
@@ -130,27 +134,6 @@ export const EnrollmentColumns = (
     },
   },
 ];
-
-const displayDiscounts = (discounts: string[]) => {
-  if (discounts.length <= 0) return "None";
-  const labels: string[] = [];
-  discounts.map((discount) => {
-    if (discount === "rank_1") {
-      labels.push("Quipper/Books");
-    }
-    if (discount === "sibling") {
-      labels.push("Siblings");
-    }
-    if (discount === "full_year") {
-      labels.push("Full Payment");
-    }
-    if (discount === "scholar") {
-      labels.push("Scholar");
-    }
-  });
-
-  return labels.join(", ");
-};
 
 const distinctOptions = (
   enrollments: EnrollmentTable[],

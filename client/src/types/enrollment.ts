@@ -1,3 +1,5 @@
+import { Student } from "./student";
+
 export interface EnrollmentTable {
   id: string;
   full_name: string;
@@ -9,4 +11,8 @@ export interface EnrollmentTable {
   total_amount: string;
   remaining_amount: string;
   payment_status: string;
+}
+
+export interface StudentEnrollmentDetails extends EnrollmentTable {
+  student: Student;
 }
