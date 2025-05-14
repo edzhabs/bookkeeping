@@ -16,10 +16,84 @@ type EnrollmentStore struct {
 	db *sql.DB
 }
 
+func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (models.Student, error) {
+	query := `
+		SELECT
+	  s.id,
+	  s.first_name,
+	  s.middle_name,
+	  s.last_name,
+	  s.suffix,
+      TRIM(CONCAT_WS(' ',
+        s.first_name,
+        CASE
+          WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
+          THEN LEFT(s.middle_name, 1) || '.'
+          ELSE NULL
+        END,
+        s.last_name,
+        s.suffix
+      )) AS full_name,
+	  s.gender,
+	  s.birthdate,
+	  s.address,
+	  s.mother_name,
+	  s.mother_job,
+	  s.mother_education,
+	  s.father_name,
+	  s.father_job,
+	  s.father_education,
+	  s.living_with,
+	  s.contact_numbers
+    FROM students s
+    LEFT JOIN enrollments e ON e.student_id = s.id AND s.deleted_at IS NULL
+    WHERE e.deleted_at IS NULL AND e.id = $1
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	var student models.Student
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		id,
+	).Scan(
+		&student.ID,
+		&student.FirstName,
+		&student.MiddleName,
+		&student.LastName,
+		&student.Suffix,
+		&student.FullName,
+		&student.Gender,
+		&student.Birthdate,
+		&student.Address,
+		&student.MotherName,
+		&student.MotherJob,
+		&student.MotherEducation,
+		&student.FatherName,
+		&student.FatherJob,
+		&student.FatherEducation,
+		&student.LivingWith,
+		pq.Array(&student.ContactNumbers),
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return student, ErrNotFound
+		default:
+			return student, err
+		}
+	}
+
+	return student, nil
+}
+
 func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error) {
 	query := `
     SELECT
-      e.student_id,
+      e.id,
       TRIM(CONCAT_WS(' ',
         s.first_name,
         CASE

@@ -23,7 +23,7 @@ import { fetchEnrollment } from "@/services/enrollments";
 
 const visibleColumns = {
   full_name: true,
-  Type: false,
+  type: false,
   gender: false,
   grade_level: true,
   school_year: true,

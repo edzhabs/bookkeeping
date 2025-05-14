@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/edzhabs/bookkeeping/internal/models"
+	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
 
@@ -26,6 +27,7 @@ type Storage struct {
 	Enrollments interface {
 		Create(ctx context.Context, enrollment *models.Enrollment) error
 		GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error)
+		GetStudentByID(ctx context.Context, id uuid.UUID) (models.Student, error)
 	}
 }
 

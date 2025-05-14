@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -9,11 +10,17 @@ import (
 	"github.com/edzhabs/bookkeeping/internal/models"
 	"github.com/edzhabs/bookkeeping/internal/store"
 	"github.com/edzhabs/bookkeeping/internal/utils"
+	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
 
+type enrollmentKey string
+
 const (
-	enrollment_months = 10
+	enrollment_months               = 10
+	enrollmentID                    = "enrollmentID"
+	enrollmentCtx     enrollmentKey = "enrollment"
 )
 
 type CreateEnrollmentPayload struct {
@@ -156,4 +163,45 @@ func (app *application) getEnrollmentsHandler(w http.ResponseWriter, r *http.Req
 		app.internalServerError(w, r, err)
 		return
 	}
+}
+
+func (app *application) getEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
+	enrollment := app.getStudentFromCtx(r)
+
+	if err := utils.ResponseJSON(w, http.StatusOK, enrollment); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) studentContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idString := chi.URLParam(r, enrollmentID)
+		id, err := uuid.Parse(idString)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		student, err := app.store.Enrollments.GetStudentByID(ctx, id)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, enrollmentCtx, student)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) getStudentFromCtx(r *http.Request) models.Student {
+	student, _ := r.Context().Value(enrollmentCtx).(models.Student)
+	return student
 }
