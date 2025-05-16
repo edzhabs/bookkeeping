@@ -9,16 +9,24 @@ import {
 import { flexRender, Table as ReactTable } from "@tanstack/react-table";
 import { DataTablePagination } from "./Table/Columns/pagination";
 import clsx from "clsx";
+import { SimpleTableSkeleton } from "./Loading/Table-skeleton";
 
 interface DataTableProps<TData extends { id: string }> {
   table: ReactTable<TData>;
   handleClick: (id: string) => void;
+  isLoading: boolean;
 }
 
 export function DataTable<TData extends { id: string }>({
   table,
   handleClick,
+  isLoading,
 }: DataTableProps<TData>) {
+  if (isLoading)
+    return (
+      <SimpleTableSkeleton columns={table.getVisibleFlatColumns().length} />
+    );
+
   return (
     <>
       <div className="rounded-md border shadow-sm w-full overflow-x-auto">

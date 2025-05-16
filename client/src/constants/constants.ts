@@ -1,6 +1,6 @@
 const CONSTANTS = {
   SCHOOL: "Talisay Mind Power Creativity Center, Inc.",
-  STALETIME: 60 * 1000, // 1min
+  STALETIME: 60 * 30000, // 30min
   RETRY: 3,
   GENDER: ["Male", "Female"],
   PAYMENTMETHODS: ["Cash", "GCash", "Bank"],

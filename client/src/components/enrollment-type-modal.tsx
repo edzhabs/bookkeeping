@@ -1,4 +1,3 @@
-"use client";
 import {
   Dialog,
   DialogContent,
@@ -23,12 +22,10 @@ export function EnrollmentTypeModal({
 
   const handleNewStudent = () => {
     navigate("/enrollment/new");
-    onClose();
   };
 
   const handleExistingStudent = () => {
     navigate("/enrollment/existing");
-    onClose();
   };
 
   return (

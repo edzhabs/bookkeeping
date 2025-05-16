@@ -162,6 +162,12 @@
     width: 100%;
   }
 
+  .custom-line-through {
+    text-decoration: line-through;
+    text-decoration-color: var(--color-destructive);
+    text-decoration-thickness: 1px;
+  }
+
   /* Add a custom breakpoint for extra small screens */
   @media (min-width: 480px) {
     .xs\:inline {

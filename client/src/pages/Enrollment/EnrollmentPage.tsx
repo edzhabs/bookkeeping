@@ -21,6 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchEnrollment } from "@/services/enrollments";
 import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
+import { TableError } from "@/components/Errors/table-error";
 
 const visibleColumns = {
   full_name: true,
@@ -43,7 +44,11 @@ export default function EnrollmentPage() {
   const [isEnrollmentTypeModalOpen, setIsEnrollmentTypeModalOpen] =
     useState(false);
 
-  const { data: enrollments } = useQuery<{
+  const {
+    data: enrollments,
+    isLoading,
+    isError,
+  } = useQuery<{
     data: EnrollmentTable[] | undefined;
   }>({
     queryKey: ["enrollment"],
@@ -74,6 +79,14 @@ export default function EnrollmentPage() {
     enrollments?.data
   );
 
+  const handleOpenModal = () => {
+    setIsEnrollmentTypeModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsEnrollmentTypeModalOpen(false);
+  };
+
   const handleClick = (id: string) => {
     navigate("/enrollment/" + id);
   };
@@ -91,18 +104,20 @@ export default function EnrollmentPage() {
     table.getColumn("full_name")?.setFilterValue(value);
   };
 
+  if (isError) return <TableError />;
+
   return (
     <>
       <Button
         className="w-full sm:w-[180px] cursor-pointer"
-        onClick={() => setIsEnrollmentTypeModalOpen(true)}
+        onClick={handleOpenModal}
       >
         <LucidePlus className="mr-2 h-4 w-4" />
         Enroll Student
       </Button>
       <EnrollmentTypeModal
         isOpen={isEnrollmentTypeModalOpen}
-        onClose={() => setIsEnrollmentTypeModalOpen(false)}
+        onClose={handleCloseModal}
       />
 
       <div className="mb-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
@@ -115,11 +130,16 @@ export default function EnrollmentPage() {
             placeholder="Search name.."
             onChange={handleSearch}
             className="w-full pl-10"
+            disabled={isLoading}
           />
         </div>
 
         {/* Filter Dropdown */}
-        <Select value={schoolYear} onValueChange={handleSchoolYear}>
+        <Select
+          value={schoolYear}
+          onValueChange={handleSchoolYear}
+          disabled={isLoading}
+        >
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
@@ -133,10 +153,14 @@ export default function EnrollmentPage() {
           </SelectContent>
         </Select>
         {/* Visibility */}
-        <DataTableViewOptions table={table} />
+        {!isLoading && <DataTableViewOptions table={table} />}
       </div>
 
-      <DataTable table={table} handleClick={handleClick} />
+      <DataTable
+        table={table}
+        handleClick={handleClick}
+        isLoading={isLoading}
+      />
     </>
   );
 }

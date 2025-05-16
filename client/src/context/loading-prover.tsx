@@ -5,7 +5,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { LoadingOverlay } from "@/components/Loading/loading-overlay";
 
 interface LoadingContextType {
   showLoading: (message?: string) => void;
@@ -17,22 +17,19 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<string | undefined>(undefined);
 
-  const showLoading = useCallback((message?: string) => {
-    setMessage(message);
+  const showLoading = useCallback(() => {
     setIsLoading(true);
   }, []);
 
   const hideLoading = useCallback(() => {
     setIsLoading(false);
-    setMessage(undefined);
   }, []);
 
   return (
     <LoadingContext.Provider value={{ showLoading, hideLoading, isLoading }}>
       {children}
-      <LoadingOverlay isLoading={isLoading} message={message} />
+      <LoadingOverlay isLoading={isLoading} />
     </LoadingContext.Provider>
   );
 }

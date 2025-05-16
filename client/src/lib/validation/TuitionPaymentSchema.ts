@@ -55,3 +55,10 @@ export const TuitionPaymentSchema = z
       path: ["fees"],
     }
   );
+
+export const tuitionFormSchema = z.object({
+  baseTuition: z.coerce
+    .number()
+    .positive({ message: "Amount must be greater than 0." })
+    .refine((val) => val > 0, { message: "Amount must be greater than 0." }),
+});

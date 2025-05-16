@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import * as z from "zod";
 
-import { TuitionPaymentSchema } from "@/lib/validation/tuitionSchema";
+import { TuitionPaymentSchema } from "@/lib/validation/TuitionPaymentSchema";
 
 export default function TuitionPaymentPage() {
   const [totalAmount, setTotalAmount] = useState<number>(0);

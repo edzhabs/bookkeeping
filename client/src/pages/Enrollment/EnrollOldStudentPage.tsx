@@ -172,7 +172,7 @@ export default function EnrollExistingStudentPage() {
           "Student has been successfully enrolled for the new school year.",
         variant: "default",
       });
-      router.push("/enrollment?success=true");
+      navigate("/enrollment?success=true");
     }, 1500);
   };
 
