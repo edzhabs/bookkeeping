@@ -1,0 +1,1 @@
+ALTER TABLE enrollments DROP CONSTRAINT IF EXISTS check_positive_fees;

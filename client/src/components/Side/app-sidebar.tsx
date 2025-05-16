@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import SIDEMENU from "@/constants/side-menu";
 import logo from "@/assets/tmpcci-logo.png";
+import { Link } from "react-router-dom";
 
 const data = {
   user: {
@@ -33,13 +34,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5 h-14"
             >
-              <a href="#">
+              <Link to="/dashboard">
                 <img src={logo} alt="TMPCCI logo" className="h-10 w-10" />
                 <span className="text-base font-semibold">
                   Talisay Mind Power <br />
                   Creativity Center, Inc.
                 </span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -3,35 +3,13 @@ package store
 import (
 	"context"
 	"database/sql"
-	"time"
 
+	"github.com/edzhabs/bookkeeping/internal/models"
 	"github.com/lib/pq"
 )
 
-type Student struct {
-	ID               int64     `json:"id"`
-	FirstName        string    `json:"first_name"`
-	MiddleName       string    `json:"middle_name"`
-	LastName         string    `json:"last_name"`
-	Suffix           string    `json:"suffix"`
-	Gender           string    `json:"gender"`
-	Birthdate        time.Time `json:"birthdate"`
-	Address          string    `json:"address"`
-	MotherName       string    `json:"mother_name"`
-	MotherOccupation string    `json:"mother_occupation"`
-	MotherEducAttain string    `json:"mother_education_attain"`
-	FatherName       string    `json:"father_name"`
-	FatherOccupation string    `json:"father_occupation"`
-	FatherEducAttain string    `json:"father_education_attain"`
-	ContactNumbers   []string  `json:"contact_numbers"`
-	LivingWith       string    `json:"living_with"`
-	CreatedAt        time.Time `json:"created_at"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	DeletedAt        time.Time `json:"deleted_at"`
-}
-
 type StudentWithAge struct {
-	Student
+	models.Student
 	Age int
 }
 
@@ -39,12 +17,12 @@ type StudentStore struct {
 	db *sql.DB
 }
 
-func (s *StudentStore) Create(ctx context.Context, student *Student) error {
+func (s *StudentStore) Create(ctx context.Context, student *models.Student) error {
 	query := `
 		INSERT INTO students 
 			(first_name, middle_name, last_name, suffix, gender, birthdate, address,
-			mother_name, mother_occupation, mother_education_attain,
-			father_name, father_occupation, father_education_attain, 
+			mother_name, mother_job, mother_education,
+			father_name, father_job, father_education, 
 			contact_numbers, living_with)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id, created_at
@@ -64,11 +42,11 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 		student.Birthdate,
 		student.Address,
 		student.MotherName,
-		student.MotherOccupation,
-		student.MotherEducAttain,
+		student.MotherJob,
+		student.MotherEducation,
 		student.FatherName,
-		student.FatherOccupation,
-		student.FatherEducAttain,
+		student.FatherJob,
+		student.FatherEducation,
 		pq.Array(student.ContactNumbers),
 		student.LivingWith,
 	).Scan(
@@ -88,16 +66,32 @@ func (s *StudentStore) Create(ctx context.Context, student *Student) error {
 	return nil
 }
 
-func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]StudentWithAge, error) {
+func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
+	// query := `
+	// 	SELECT id, first_name, middle_name, last_name, suffix,
+	// 		CONCAT_WS(' ', first_name, middle_name, last_name) AS full_name,
+	// 		gender, birthdate, EXTRACT(YEAR FROM age(birthdate)) AS age,
+	// 		address, mother_name, mother_occupation,
+	// 		mother_education_attain, father_name, father_occupation, father_education_attain,
+	// 		contact_numbers, living_with, created_at
+	// 	FROM students
+	// 	WHERE
+	// 		(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
+	// 		deleted_at IS NULL
+	// 	ORDER BY created_at DESC
+	// `
+
 	query := `
-		SELECT id, first_name, middle_name, last_name, suffix, gender, birthdate, 
-			EXTRACT(YEAR FROM age(birthdate)) AS age, address, mother_name, mother_occupation,
+		SELECT id, first_name, middle_name, last_name, suffix, 
+			CONCAT_WS(' ', first_name, middle_name, last_name) AS full_name,
+			gender, birthdate, EXTRACT(YEAR FROM age(birthdate)) AS age,  
+			address, mother_name, mother_occupation,
 			mother_education_attain, father_name, father_occupation, father_education_attain,
 			contact_numbers, living_with, created_at
 		FROM students
 		WHERE
-			(last_name ILIKE '%' || $1 || '%' OR middle_name ILIKE '%' || $1 || '%' OR first_name ILIKE '%' || $1 || '%' OR last_name ILIKE '%' || $1 || '%') AND
 			deleted_at IS NULL
+		ORDER BY created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
@@ -106,7 +100,6 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 	rows, err := s.db.QueryContext(
 		ctx,
 		query,
-		fq.Search,
 	)
 	if err != nil {
 		return nil, err
@@ -124,16 +117,17 @@ func (s *StudentStore) GetAll(ctx context.Context, fq PaginatedQuery) ([]Student
 			&student.MiddleName,
 			&student.LastName,
 			&student.Suffix,
+			&student.FullName,
 			&student.Gender,
 			&student.Birthdate,
 			&student.Age,
 			&student.Address,
 			&student.MotherName,
-			&student.MotherOccupation,
-			&student.MotherEducAttain,
+			&student.MotherJob,
+			&student.MotherEducation,
 			&student.FatherName,
-			&student.FatherOccupation,
-			&student.FatherEducAttain,
+			&student.FatherJob,
+			&student.FatherEducation,
 			pq.Array(&student.ContactNumbers),
 			&student.LivingWith,
 			&student.CreatedAt,
