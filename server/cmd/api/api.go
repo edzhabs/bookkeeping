@@ -79,7 +79,7 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/students", func(r chi.Router) {
-			// r.Get("/", app.getEnrollmentsHandler)
+			r.Get("/dropdown", app.getStudentsDropdownHandler)
 			r.Post("/", app.createStudentHandler)
 		})
 	})

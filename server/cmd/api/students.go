@@ -99,3 +99,16 @@ func (app *application) getStudentsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+func (app *application) getStudentsDropdownHandler(w http.ResponseWriter, r *http.Request) {
+	students, err := app.store.Students.GetDropdown(r.Context())
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := utils.ResponseJSON(w, http.StatusOK, students); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}

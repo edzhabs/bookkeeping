@@ -23,6 +23,7 @@ type Storage struct {
 	Students interface {
 		Create(ctx context.Context, student *models.Student) error
 		GetAll(ctx context.Context) ([]StudentWithAge, error)
+		GetDropdown(ctx context.Context) ([]models.StudentDropdown, error)
 	}
 	Enrollments interface {
 		Create(ctx context.Context, enrollment *models.Enrollment) error

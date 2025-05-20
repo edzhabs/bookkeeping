@@ -47,3 +47,10 @@ export const displayDiscounts = (discounts: string[]) => {
 
   return labels.join(", ");
 };
+
+export const formatDisplayGradeLevel = (grade_level: string) => {
+  return grade_level
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};

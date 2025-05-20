@@ -18,113 +18,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { Student } from "@/types/student";
+import type { Student, StudentDropdown } from "@/types/student";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useLoading } from "@/context/loading-prover";
 import { StudentCombobox } from "@/components/student-combo-box";
-
-// Sample data for demonstration
-const existingStudents: Student[] = [
-  {
-    id: "1",
-    firstName: "John",
-    middleName: "Robert",
-    lastName: "Doe",
-    suffix: "",
-    gender: "Male",
-    birthdate: "2010-05-15",
-    schoolYear: "2022-2023",
-    address: "123 Main St, Anytown, USA",
-    livingWith: "Both Parents",
-    contactNumbers: ["555-123-4567", "555-987-6543"],
-    discount: "None",
-    discountPercentage: 0,
-    gradeLevel: "Grade 9",
-    status: "returning",
-    parents: {
-      father: {
-        fullName: "Robert Doe",
-        job: "Engineer",
-        educationAttainment: "Bachelor's Degree",
-      },
-      mother: {
-        fullName: "Jane Doe",
-        job: "Doctor",
-        educationAttainment: "Doctorate",
-      },
-    },
-  },
-  {
-    id: "2",
-    firstName: "Emma",
-    middleName: "Grace",
-    lastName: "Smith",
-    suffix: "",
-    gender: "Female",
-    birthdate: "2011-08-22",
-    schoolYear: "2022-2023",
-    address: "456 Oak Ave, Somewhere, USA",
-    livingWith: "Mother",
-    contactNumbers: ["555-222-3333"],
-    discount: "Sibling Discount",
-    discountPercentage: 10,
-    gradeLevel: "Grade 7",
-    status: "returning",
-    parents: {
-      mother: {
-        fullName: "Sarah Smith",
-        job: "Teacher",
-        educationAttainment: "Master's Degree",
-      },
-    },
-  },
-  {
-    id: "3",
-    firstName: "Michael",
-    middleName: "James",
-    lastName: "Johnson",
-    suffix: "Jr.",
-    gender: "Male",
-    birthdate: "2012-03-15",
-    schoolYear: "2022-2023",
-    address: "789 Pine St, Elsewhere, USA",
-    livingWith: "Both Parents",
-    contactNumbers: ["555-444-5555"],
-    discount: "None",
-    discountPercentage: 0,
-    gradeLevel: "Grade 6",
-    status: "returning",
-    parents: {
-      father: {
-        fullName: "Michael Johnson Sr.",
-        job: "Accountant",
-        educationAttainment: "Master's Degree",
-      },
-      mother: {
-        fullName: "Lisa Johnson",
-        job: "Nurse",
-        educationAttainment: "Bachelor's Degree",
-      },
-    },
-  },
-];
-
-const gradeLevels = [
-  "Kindergarten",
-  "Grade 1",
-  "Grade 2",
-  "Grade 3",
-  "Grade 4",
-  "Grade 5",
-  "Grade 6",
-  "Grade 7",
-  "Grade 8",
-  "Grade 9",
-  "Grade 10",
-  "Grade 11",
-  "Grade 12",
-];
+import { useQuery } from "@tanstack/react-query";
+import { fetchStudentsDropdown } from "@/services/students";
+import CONSTANTS from "@/constants/constants";
+import { formatDisplayGradeLevel } from "@/utils";
 
 const schoolYears = ["2023-2024", "2024-2025", "2025-2026"];
 
@@ -133,14 +35,24 @@ export default function EnrollExistingStudentPage() {
   const { toast } = useToast();
   const { showLoading, hideLoading } = useLoading();
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
+  const [selectedStudent, setSelectedStudent] = useState<StudentDropdown>();
   const [selectedGradeLevel, setSelectedGradeLevel] = useState<string>("");
   const [selectedSchoolYear, setSelectedSchoolYear] =
     useState<string>("2023-2024");
   const [activeTab, setActiveTab] = useState("student");
 
-  const selectedStudent = existingStudents.find(
-    (student) => student.id === selectedStudentId
-  );
+  const {
+    data: response,
+    isLoading,
+    isError,
+  } = useQuery<{
+    data: StudentDropdown[] | undefined;
+  }>({
+    queryKey: ["students"],
+    queryFn: fetchStudentsDropdown,
+  });
+
+  const existingStudents = response?.data;
 
   const handleSubmit = () => {
     if (!selectedStudentId) {
@@ -177,19 +89,23 @@ export default function EnrollExistingStudentPage() {
   };
 
   const getNextGradeLevel = (currentGradeLevel: string): string => {
-    const currentIndex = gradeLevels.indexOf(currentGradeLevel);
-    if (currentIndex === -1 || currentIndex === gradeLevels.length - 1) {
+    const currentIndex = CONSTANTS.GRADELEVELS.indexOf(currentGradeLevel);
+    if (
+      currentIndex === -1 ||
+      currentIndex === CONSTANTS.GRADELEVELS.length - 1
+    ) {
       return "";
     }
-    return gradeLevels[currentIndex + 1];
+    return CONSTANTS.GRADELEVELS[currentIndex + 1];
   };
 
-  const handleStudentChange = (studentId: string) => {
-    setSelectedStudentId(studentId);
-    const student = existingStudents.find((s) => s.id === studentId);
+  const handleStudentChange = (studentID: string) => {
+    setSelectedStudentId(studentID);
+    const student = existingStudents?.find((s) => s.id === studentID);
     if (student) {
-      const nextGradeLevel = getNextGradeLevel(student.gradeLevel);
+      const nextGradeLevel = getNextGradeLevel(student.grade_level);
       setSelectedGradeLevel(nextGradeLevel);
+      setSelectedStudent(student);
     }
   };
 
@@ -231,83 +147,92 @@ export default function EnrollExistingStudentPage() {
                   <Label htmlFor="student">Select Student</Label>
                   <StudentCombobox
                     selectedValue=""
-                    students={existingStudents}
+                    students={existingStudents || []}
                     placeholder="Select a student"
                     onValueChange={handleStudentChange}
+                    isLoading={isLoading}
                   />
                 </div>
 
                 {selectedStudent && (
-                  <div className="rounded-md border p-4 space-y-4">
-                    <h3 className="font-medium">Current Information</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Name</p>
-                        <p>
-                          {selectedStudent.lastName},{" "}
-                          {selectedStudent.firstName}{" "}
-                          {selectedStudent.middleName} {selectedStudent.suffix}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">
-                          Current Grade Level
-                        </p>
-                        <p>{selectedStudent.gradeLevel}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">
-                          Current School Year
-                        </p>
-                        <p>{selectedStudent.schoolYear}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Address</p>
-                        <p>{selectedStudent.address}</p>
+                  <>
+                    <div className="rounded-md border p-4 space-y-4">
+                      <h3 className="font-medium">Current Information</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-500">Name</p>
+                          <p>
+                            {selectedStudent.first_name}{" "}
+                            {selectedStudent.middle_name}{" "}
+                            {selectedStudent.last_name} {selectedStudent.suffix}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Current Grade Level
+                          </p>
+                          <p className="capitalize">
+                            {selectedStudent.grade_level}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">
+                            Current School Year
+                          </p>
+                          <p>{selectedStudent.school_year}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Address</p>
+                          <p>{selectedStudent.address}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
+
+                    <div className="grid grid-cols-12 pt-1 gap-4">
+                      <div className="space-y-2 col-span-6">
+                        <Label htmlFor="gradeLevel">New Grade Level</Label>
+                        <Select
+                          value={selectedGradeLevel}
+                          onValueChange={setSelectedGradeLevel}
+                        >
+                          <SelectTrigger id="gradeLevel" className="w-full">
+                            <SelectValue placeholder="Select grade level" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CONSTANTS.GRADELEVELS.map((grade) => (
+                              <SelectItem
+                                className="capitalize"
+                                key={grade}
+                                value={grade}
+                              >
+                                {formatDisplayGradeLevel(grade)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2 col-span-6">
+                        <Label htmlFor="schoolYear">New School Year</Label>
+                        <Select
+                          value={selectedSchoolYear}
+                          onValueChange={setSelectedSchoolYear}
+                        >
+                          <SelectTrigger id="schoolYear" className="w-full">
+                            <SelectValue placeholder="Select school year" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {schoolYears.map((year) => (
+                              <SelectItem key={year} value={year}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
                 )}
-
-                <div className="grid grid-cols-12 pt-1 gap-4">
-                  <div className="space-y-2 col-span-6">
-                    <Label htmlFor="gradeLevel">New Grade Level</Label>
-                    <Select
-                      value={selectedGradeLevel}
-                      onValueChange={setSelectedGradeLevel}
-                    >
-                      <SelectTrigger id="gradeLevel" className="w-full">
-                        <SelectValue placeholder="Select grade level" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gradeLevels.map((grade) => (
-                          <SelectItem key={grade} value={grade}>
-                            {grade}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2 col-span-6">
-                    <Label htmlFor="schoolYear">New School Year</Label>
-                    <Select
-                      value={selectedSchoolYear}
-                      onValueChange={setSelectedSchoolYear}
-                    >
-                      <SelectTrigger id="schoolYear" className="w-full">
-                        <SelectValue placeholder="Select school year" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {schoolYears.map((year) => (
-                          <SelectItem key={year} value={year}>
-                            {year}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
 
                 <div className="flex justify-end pt-4">
                   <Button

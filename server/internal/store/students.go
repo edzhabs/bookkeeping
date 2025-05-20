@@ -141,3 +141,49 @@ func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
 
 	return students, nil
 }
+
+func (s *StudentStore) GetDropdown(ctx context.Context) ([]models.StudentDropdown, error) {
+	query := `
+		SELECT s.id, s.first_name, s.middle_name, s.last_name, s.suffix, s.address, e.grade_level, e.school_year
+		FROM students s
+		LEFT JOIN LATERAL (
+			SELECT e.grade_level, e.school_year
+			FROM enrollments e
+			WHERE e.student_id = s.id AND e.deleted_at IS NULL
+			ORDER BY e.school_year DESC
+			LIMIT 1
+		) e ON true
+		WHERE s.deleted_at IS NULL
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	var students []models.StudentDropdown
+
+	for rows.Next() {
+		var student models.StudentDropdown
+		err := rows.Scan(
+			&student.ID,
+			&student.FirstName,
+			&student.MiddleName,
+			&student.LastName,
+			&student.Suffix,
+			&student.Address,
+			&student.GradeLevel,
+			&student.SchoolYear,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		students = append(students, student)
+	}
+
+	return students, nil
+}

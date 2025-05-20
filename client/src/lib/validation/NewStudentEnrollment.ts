@@ -1,3 +1,4 @@
+import CONSTANTS from "@/constants/constants";
 import { z } from "zod";
 
 const contactNumberRegex = /^(\+?\d{7,15})$/; // Adjust regex for your preferred format
@@ -50,23 +51,9 @@ const newEnrollmentSchema = z.object({
         message: "School year must span exactly one year (e.g., 2022-2023).",
       }
     ),
-  grade_level: z.enum(
-    [
-      "nursery-1",
-      "nursery-2",
-      "kinder-1",
-      "kinder-2",
-      "grade-1",
-      "grade-2",
-      "grade-3",
-      "grade-4",
-      "grade-5",
-      "grade-6",
-    ],
-    {
-      required_error: "Grade level is required.",
-    }
-  ),
+  grade_level: z.enum(CONSTANTS.GRADELEVELS, {
+    required_error: "Grade level is required.",
+  }),
   living_with: z.string().optional(),
   father_name: z.string().optional(),
   father_job: z.string().optional(),

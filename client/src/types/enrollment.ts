@@ -9,8 +9,9 @@ export interface EnrollmentTable {
   school_year: string;
   discount_types: string[];
   total_amount: string;
+  total_paid: string;
   remaining_amount: string;
-  payment_status: string;
+  payment_status: "paid" | "partial" | "unpaid";
 }
 
 export interface StudentEnrollmentDetails extends EnrollmentTable {

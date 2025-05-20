@@ -3,7 +3,7 @@ CREATE TABLE enrollments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     student_id UUID NOT NULL REFERENCES students(id),
     school_year VARCHAR(20) NOT NULL,
-    grade_level VARCHAR(20) NOT NULL CHECK (grade_level IN ('nursery-1', 'nursery-2', 'kinder-1', 'kinder-2', 'grade-1', 'grade-2', 'grade-3', 'grade-4', 'grade-5', 'grade-6')),
+    grade_level VARCHAR(20) NOT NULL,
     type VARCHAR(10) NOT NULL CHECK (type IN ('new', 'old')),
     monthly_tuition NUMERIC(10,2) NOT NULL,
     months INTEGER NOT NULL DEFAULT 10,

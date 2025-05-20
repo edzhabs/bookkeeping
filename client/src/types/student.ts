@@ -1,4 +1,5 @@
 export interface Student {
+  id?: string;
   first_name: string;
   middle_name: string;
   last_name: string;
@@ -15,4 +16,15 @@ export interface Student {
   mother_name?: string;
   mother_job?: string;
   mother_education?: string;
+}
+
+export interface StudentDropdown {
+  id: string;
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  suffix: string;
+  address: string;
+  grade_level: string;
+  school_year: string;
 }

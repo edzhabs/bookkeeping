@@ -15,7 +15,8 @@ const CONSTANTS = {
     "grade-4",
     "grade-5",
     "grade-6",
-  ],
+    "grade-7",
+  ] as const,
 };
 
 export default CONSTANTS;

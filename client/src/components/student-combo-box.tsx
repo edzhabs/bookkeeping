@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,11 +16,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { Student } from "@/types/student";
+import type { StudentDropdown } from "@/types/student";
 
 interface StudentComboboxProps {
-  students: Student[];
+  students: StudentDropdown[];
   selectedValue: string;
+  isLoading: boolean;
   onValueChange: (value: string) => void;
   placeholder?: string;
 }
@@ -28,6 +29,7 @@ interface StudentComboboxProps {
 export function StudentCombobox({
   students,
   selectedValue,
+  isLoading,
   onValueChange,
   placeholder = "Select a student...",
 }: StudentComboboxProps) {
@@ -45,12 +47,13 @@ export function StudentCombobox({
           role="combobox"
           aria-expanded={open}
           className="w-full justify-between"
+          disabled={isLoading}
         >
           {selectedValue
-            ? `${selectedStudent?.lastName}, ${selectedStudent?.firstName} ${
-                selectedStudent?.middleName || ""
+            ? `${selectedStudent?.last_name} , ${selectedStudent?.first_name} ${
+                selectedStudent?.middle_name || ""
               } ${selectedStudent?.suffix || ""} (${
-                selectedStudent?.gradeLevel
+                selectedStudent?.grade_level
               })`
             : placeholder}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -71,9 +74,9 @@ export function StudentCombobox({
               {students.map((student) => (
                 <CommandItem
                   key={student.id}
-                  value={`${student.lastName} ${student.firstName} ${
-                    student.middleName || ""
-                  } ${student.suffix || ""} ${student.gradeLevel}`}
+                  value={`${student.last_name} ${student.first_name} ${
+                    student.middle_name || ""
+                  } ${student.suffix || ""} ${student.grade_level}`}
                   onSelect={() => {
                     onValueChange(student.id);
                     setOpen(false);
@@ -87,11 +90,11 @@ export function StudentCombobox({
                   />
                   <div className="flex flex-col">
                     <span>
-                      {student.lastName}, {student.firstName}{" "}
-                      {student.middleName} {student.suffix}
+                      {student.last_name}, {student.first_name}{" "}
+                      {student.middle_name} {student.suffix}
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {student.gradeLevel} ({student.schoolYear})
+                    <span className="text-xs text-muted-foreground capitalize">
+                      {student.grade_level} ({student.school_year})
                     </span>
                   </div>
                 </CommandItem>

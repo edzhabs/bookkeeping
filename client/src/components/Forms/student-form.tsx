@@ -25,6 +25,8 @@ import { logActivity } from "@/lib/activity-logger";
 import newEnrollmentSchema from "@/lib/validation/NewStudentEnrollment";
 import { EnrollNewStudent } from "@/types/enrollment";
 import { useState } from "react";
+import CONSTANTS from "@/constants/constants";
+import { formatDisplayGradeLevel } from "@/utils";
 
 interface StudentFormProps {
   setActiveTab: (tab: string) => void;
@@ -267,16 +269,15 @@ const StudentInfoForm = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="nursery-1">Nursery - 1</SelectItem>
-                      <SelectItem value="nursery-2">Nursery - 2</SelectItem>
-                      <SelectItem value="kinder-1">Kindergarten - 1</SelectItem>
-                      <SelectItem value="kinder-2">Kindergarten - 2</SelectItem>
-                      <SelectItem value="grade-1">Grade 1</SelectItem>
-                      <SelectItem value="grade-2">Grade 2</SelectItem>
-                      <SelectItem value="grade-3">Grade 3</SelectItem>
-                      <SelectItem value="grade-4">Grade 4</SelectItem>
-                      <SelectItem value="grade-5">Grade 5</SelectItem>
-                      <SelectItem value="grade-6">Grade 6</SelectItem>
+                      {CONSTANTS.GRADELEVELS.map((grade) => (
+                        <SelectItem
+                          className="capitalize"
+                          key={grade}
+                          value={grade}
+                        >
+                          {formatDisplayGradeLevel(grade)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

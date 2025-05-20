@@ -155,7 +155,7 @@ const distinctGradeLevelOptions = (
     "Nursery-2",
     "Kinder-1",
     "Kinder-2",
-    ...Array.from({ length: 6 }, (_, i) => `Grade-${i + 1}`), // Grade 1 to 6
+    ...Array.from({ length: 7 }, (_, i) => `Grade-${i + 1}`), // Grade 1 to 6
   ];
 
   const values = enrollments
