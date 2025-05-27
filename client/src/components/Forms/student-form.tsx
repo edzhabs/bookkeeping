@@ -21,7 +21,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { logActivity } from "@/lib/activity-logger";
 import newEnrollmentSchema from "@/lib/validation/NewStudentEnrollment";
 import { EnrollNewStudent } from "@/types/enrollment";
 import { useState } from "react";
@@ -112,13 +111,6 @@ const StudentInfoForm = ({
     };
     setEnrollmentData(enrollment);
     setActiveTab("fees");
-
-    logActivity({
-      action: "Created",
-      entityType: "Student",
-      entityId: "test_student_id_1",
-      details: `Created student record for ${enrollment.student.first_name} ${enrollment.student.last_name}`,
-    });
   };
 
   return (

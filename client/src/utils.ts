@@ -54,3 +54,18 @@ export const formatDisplayGradeLevel = (grade_level: string) => {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 };
+
+export const getStudentDisplayName = (
+  student:
+    | {
+        first_name: string;
+        middle_name: string;
+        last_name: string;
+        suffix: string;
+      }
+    | undefined
+) => {
+  return `${student?.last_name}, ${student?.first_name} ${
+    student?.middle_name || ""
+  } ${student?.suffix || ""}`.trim();
+};

@@ -52,7 +52,7 @@ const newEnrollmentSchema = z.object({
       }
     ),
   grade_level: z.enum(CONSTANTS.GRADELEVELS, {
-    required_error: "Grade level is required.",
+    required_error: "Please select a grade level.",
   }),
   living_with: z.string().optional(),
   father_name: z.string().optional(),

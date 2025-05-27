@@ -2,12 +2,12 @@ import { useState } from "react";
 import TuitionSummaryForm from "../Forms/tuitionSummary-form";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-import { EnrollNewStudent } from "@/types/enrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import TuitionFeeForm from "../Forms/tuitionFee-form";
 
 interface TuitionProps {
-  enrollmentData: EnrollNewStudent | null;
-  setEnrollmentData: (data: EnrollNewStudent) => void;
+  enrollmentData: EnrollStudent | null;
+  setEnrollmentData: (data: EnrollStudent) => void;
   activeTab: string;
   isPending: boolean;
   setActiveTab: (tab: string) => void;
@@ -38,8 +38,8 @@ const TuitionFeeTab = ({
           <Card>
             <CardHeader>
               <CardTitle>
-                Fees & Discounts for {enrollmentData.student.first_name}{" "}
-                {enrollmentData.student.last_name}
+                Fees & Discounts for {enrollmentData.student?.first_name}{" "}
+                {enrollmentData.student?.last_name}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -75,9 +75,9 @@ const TuitionFeeTab = ({
               <CardTitle>
                 Tuition Summary for{" "}
                 <span className="capitalize">
-                  {enrollmentData.student.first_name}{" "}
-                  {enrollmentData.student.last_name}{" "}
-                  {enrollmentData.student.suffix || ""}
+                  {enrollmentData.student?.first_name}{" "}
+                  {enrollmentData.student?.last_name}{" "}
+                  {enrollmentData.student?.suffix || ""}
                 </span>
               </CardTitle>
             </CardHeader>

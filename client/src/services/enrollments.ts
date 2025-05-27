@@ -1,4 +1,4 @@
-import { EnrollNewStudent } from "@/types/enrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import axiosClient from "./api-client";
 import { AxiosError } from "axios";
 import { APIerror } from "@/types/api";
@@ -13,11 +13,18 @@ export const fetchEnrollment = async () => {
   }
 };
 
-export const enrollNewStudent = async (body: EnrollNewStudent) => {
+export const enrollStudent = async (body: EnrollStudent) => {
   try {
-    const response = await axiosClient.post("/enrollments", body);
+    let response;
+    if (body.type === "new") {
+      response = await axiosClient.post("/enrollments/new", body);
+    }
 
-    return response.data;
+    if (body.type === "old") {
+      response = await axiosClient.post("/enrollments/existing", body);
+    }
+
+    return response?.data;
   } catch (err) {
     const error = err as AxiosError<APIerror>;
 

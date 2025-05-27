@@ -294,8 +294,11 @@ func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTable
 
 func (s *EnrollmentStore) Create(ctx context.Context, enrollment *models.Enrollment) error {
 	return withTx(ctx, s.db, func(tx *sql.Tx) error {
-		if err := s.createStudent(ctx, tx, enrollment); err != nil {
-			return err
+
+		if enrollment.Type == "new" {
+			if err := s.createStudent(ctx, tx, enrollment); err != nil {
+				return err
+			}
 		}
 
 		if err := s.createEnrollment(ctx, tx, enrollment); err != nil {
