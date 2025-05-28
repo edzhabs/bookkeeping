@@ -1,3 +1,7 @@
+import { DeleteConfirmation } from "@/components/delete-confirmation";
+import { DeleteVerification } from "@/components/delete-verification";
+import { EditConfirmation } from "@/components/edit-confirmation";
+import { ErrorComponent } from "@/components/Errors/error";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,6 +12,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -19,11 +30,17 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/context/loading-prover";
-import { fetchStudentDetails } from "@/services/students";
+import { logActivity } from "@/lib/activity-logger";
+import { fetchEnrollmentDetails } from "@/services/enrollments";
 import type { ActivityLogItem } from "@/types/activity-log";
 import { StudentEnrollmentDetails } from "@/types/enrollment";
 import type { Tuition } from "@/types/tuition";
-import { displayDiscounts, formatToCurrency } from "@/utils";
+import {
+  displayDiscounts,
+  formatBirthDate,
+  formatFullName,
+  formatToCurrency,
+} from "@/utils";
 import { useQuery } from "@tanstack/react-query";
 import {
   ArrowLeft,
@@ -32,12 +49,15 @@ import {
   CreditCard,
   GraduationCap,
   MapPin,
+  MoreVertical,
   Pencil,
   Phone,
+  Trash2,
   Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 
 // Sample activity logs
 const sampleActivityLogs: ActivityLogItem[] = [
@@ -66,13 +86,17 @@ export default function StudentDetailsPage() {
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
 
+  const [showEditConfirmation, setShowEditConfirmation] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showDeleteVerification, setShowDeleteVerification] = useState(false);
+
   const [tuitions, setTuitions] = useState<Tuition[]>([]);
 
   const { data, isLoading, isError } = useQuery<{
     data: StudentEnrollmentDetails;
   }>({
     queryKey: ["enrollment", params.id],
-    queryFn: () => fetchStudentDetails(params.id),
+    queryFn: () => fetchEnrollmentDetails(params.id),
   });
   const enrollment = data?.data;
 
@@ -88,6 +112,23 @@ export default function StudentDetailsPage() {
     navigate(`/enrollment/${params.id}/edit`);
   };
 
+  const handleEditCancel = () => {
+    setShowEditConfirmation(false);
+  };
+
+  const handleDeleteConfirm = () => {
+    setShowDeleteConfirmation(false);
+    setShowDeleteVerification(true);
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmation(false);
+  };
+
+  const handleDeleteVerificationCancel = () => {
+    setShowDeleteVerification(false);
+  };
+
   const handleViewTuition = (tuitionId: string) => {
     navigate(`/tuitions/${tuitionId}`);
   };
@@ -99,6 +140,15 @@ export default function StudentDetailsPage() {
   const handleMakePayment = (tuitionId: string) => {
     navigate(`/tuitions/${tuitionId}/payment`);
   };
+
+  const handleDeleteVerificationConfirm = async () => {
+    setShowDeleteVerification(false);
+    showLoading("Deleting student record...");
+
+    console.log("deleted");
+  };
+
+  if (isError) return <ErrorComponent />;
 
   if (!enrollment) {
     return (
@@ -120,7 +170,7 @@ export default function StudentDetailsPage() {
 
   return (
     <div className="container py-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-row md:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4" />
@@ -134,10 +184,29 @@ export default function StudentDetailsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={handleEditStudent}>
-          <Pencil className="mr-2 h-4 w-4" />
-          Edit Student
-        </Button>
+        <div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={() => setShowEditConfirmation(true)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit Student
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setShowDeleteConfirmation(true)}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Student
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3 mb-6">
@@ -145,14 +214,10 @@ export default function StudentDetailsPage() {
           <CardHeader className="pb-2">
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle className="text-2xl font-bold text-slate-800">
-                  {enrollment.student.first_name}{" "}
-                  {enrollment.student.middle_name
-                    ? enrollment.student.middle_name + " "
-                    : ""}
-                  {enrollment.student.last_name} {enrollment.student.suffix}
+                <CardTitle className="text-2xl font-bold text-slate-800 capitalize">
+                  {formatFullName(enrollment.student)}
                 </CardTitle>
-                <CardDescription className="text-slate-500 mt-1">
+                <CardDescription className="text-slate-500 mt-1 capitalize">
                   {enrollment.grade_level} • {enrollment.school_year}
                 </CardDescription>
               </div>
@@ -160,9 +225,7 @@ export default function StudentDetailsPage() {
                 variant={enrollment.type === "new" ? "default" : "secondary"}
                 className="capitalize text-sm"
               >
-                {enrollment.type === "new"
-                  ? "New Student"
-                  : "Returning Student"}
+                {enrollment.type === "new" ? "New Student" : "Old Student"}
               </Badge>
             </div>
           </CardHeader>
@@ -171,31 +234,34 @@ export default function StudentDetailsPage() {
               <div className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4 text-slate-400" />
                 <span className="text-sm text-slate-600">
-                  Born:{" "}
-                  {new Date(enrollment.student.birthdate).toLocaleDateString()}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-slate-400" />
-                <span className="text-sm text-slate-600">
-                  Gender: {enrollment.student.gender}
+                  Born: {formatBirthDate(enrollment.student.birthdate || "")}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-slate-400" />
                 <span className="text-sm text-slate-600">
-                  Discount: {enrollment.discount_types || "None"}{" "}
+                  Discount:{" "}
+                  {enrollment.discount_types.length > 0
+                    ? displayDiscounts(enrollment.discount_types)
+                    : "None"}{" "}
                 </span>
               </div>
               <div className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-slate-400" />
+                <span className="text-sm text-slate-600 capitalize">
+                  Gender: {enrollment.student.gender}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-slate-400" />
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-slate-600 capitalize">
                   Living with: {enrollment.student.living_with}
                 </span>
               </div>
               <div className="flex items-start gap-2 md:col-span-2">
                 <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
-                <span className="text-sm text-slate-600">
+                <span className="text-sm text-slate-600 capitalize">
                   {enrollment.student.address}
                 </span>
               </div>
@@ -317,25 +383,20 @@ export default function StudentDetailsPage() {
                   <div className="space-y-3">
                     <div>
                       <p className="text-sm font-medium">Full Name</p>
-                      <p className="text-sm text-slate-600">
-                        {enrollment.student.first_name}{" "}
-                        {enrollment.student.middle_name}{" "}
-                        {enrollment.student.last_name}{" "}
-                        {enrollment.student.suffix}
+                      <p className="text-sm text-slate-600 capitalize">
+                        {formatFullName(enrollment.student)}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Gender</p>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-slate-600 capitalize">
                         {enrollment.student.gender}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm font-medium">Birthdate</p>
                       <p className="text-sm text-slate-600">
-                        {new Date(
-                          enrollment.student.birthdate
-                        ).toLocaleDateString()}
+                        {formatBirthDate(enrollment.student.birthdate || "")}
                       </p>
                     </div>
                     <div>
@@ -359,7 +420,7 @@ export default function StudentDetailsPage() {
                     </div>
                     <div>
                       <p className="text-sm font-medium">Grade Level</p>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm text-slate-600 capitalize">
                         {enrollment.grade_level}
                       </p>
                     </div>
@@ -431,19 +492,19 @@ export default function StudentDetailsPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <p className="text-sm font-medium">Name</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.father_name || "-"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Occupation</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.father_job || "Not specified"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Education</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.father_education || "Not specified"}
                     </p>
                   </div>
@@ -455,19 +516,19 @@ export default function StudentDetailsPage() {
                 <div className="grid gap-4 md:grid-cols-3">
                   <div>
                     <p className="text-sm font-medium">Name</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.mother_name || "-"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Occupation</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.mother_job || "Not specified"}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Education</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 capitalize">
                       {enrollment.student.mother_education || "Not specified"}
                     </p>
                   </div>
@@ -757,6 +818,39 @@ export default function StudentDetailsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Edit Confirmation Modal */}
+      <EditConfirmation
+        isOpen={showEditConfirmation}
+        onClose={handleEditCancel}
+        onConfirm={handleEditStudent}
+        title="Edit Student Record"
+        description="You are about to edit this student's information. Any changes you make will be saved to the system."
+        studentName={formatFullName(enrollment.student)}
+      />
+
+      {/* First Delete Confirmation Modal */}
+      <DeleteConfirmation
+        isOpen={showDeleteConfirmation}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Student"
+        description={`Are you sure you want to delete ${formatFullName(
+          enrollment.student
+        )}? This action cannot be undone.`}
+      />
+
+      {/* Second Delete Verification Modal */}
+      <DeleteVerification
+        isOpen={showDeleteVerification}
+        onClose={handleDeleteVerificationCancel}
+        onConfirm={handleDeleteVerificationConfirm}
+        title="Verify Deletion"
+        description="This is a permanent action that will delete all student data including enrollment records, tuition information, and payment history. Please confirm by typing the student's last name below."
+        verificationText={enrollment.student.last_name}
+        verificationLabel={`Type "${enrollment.student.last_name}" to confirm deletion:`}
+        placeholder="Enter student's last name"
+      />
     </div>
   );
 }

@@ -7,9 +7,11 @@ import TuitionFeeForm from "../Forms/tuitionFee-form";
 
 interface TuitionProps {
   enrollmentData: EnrollStudent | null;
-  setEnrollmentData: (data: EnrollStudent) => void;
+  isEdit: boolean;
+  initialData: EnrollStudent | undefined;
   activeTab: string;
   isPending: boolean;
+  setEnrollmentData: (data: EnrollStudent) => void;
   setActiveTab: (tab: string) => void;
   handleSubmit: () => void;
 }
@@ -17,6 +19,8 @@ interface TuitionProps {
 const TuitionFeeTab = ({
   enrollmentData,
   activeTab,
+  isEdit = false,
+  initialData,
   isPending,
   setActiveTab,
   setEnrollmentData,
@@ -44,7 +48,9 @@ const TuitionFeeTab = ({
             </CardHeader>
             <CardContent>
               <TuitionFeeForm
+                isEdit={isEdit}
                 enrollmentData={enrollmentData}
+                initialData={initialData}
                 discountAmount={discountAmount}
                 rankOneDiscountAmount={rankOneDiscountAmount}
                 siblingDiscountAmount={siblingDiscountAmount}

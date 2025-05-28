@@ -38,3 +38,28 @@ export const enrollStudent = async (body: EnrollStudent) => {
     }
   }
 };
+
+export const fetchEnrollmentDetails = async (
+  enrollmentID: string | undefined
+) => {
+  try {
+    const response = await axiosClient.get("/enrollments/" + enrollmentID);
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    console.error("Error fetching student details data", error);
+    throw error;
+  }
+};
+
+export const fetchEditEnrollmentDetails = async (
+  enrollmentID: string | undefined
+) => {
+  try {
+    const response = await axiosClient.get(`/enrollments/${enrollmentID}/edit`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching student details data", error);
+    throw error;
+  }
+};

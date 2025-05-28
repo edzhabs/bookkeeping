@@ -17,7 +17,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import type { StudentDropdown } from "@/types/student";
-import { getStudentDisplayName } from "@/utils";
+import { formatFullNameLastFirst } from "@/utils";
 
 interface StudentComboboxProps {
   students: StudentDropdown[] | undefined;
@@ -64,7 +64,7 @@ export function StudentCombobox({
           {selectedValue ? (
             <div className="flex flex-col items-start">
               <span className="font-medium">
-                {getStudentDisplayName(selectedStudent)}
+                {formatFullNameLastFirst(selectedStudent)}
               </span>
               <span className="text-xs text-muted-foreground capitalize">
                 {selectedStudent?.grade_level} • {selectedStudent?.school_year}
@@ -106,7 +106,7 @@ export function StudentCombobox({
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
-                        {getStudentDisplayName(student)}
+                        {formatFullNameLastFirst(student)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">

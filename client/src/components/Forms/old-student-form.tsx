@@ -29,8 +29,8 @@ import {
 import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
 import { formatDisplayGradeLevel } from "@/utils";
-import ErrorComponent from "../Errors/unexpected-error";
 import { EnrollStudent } from "@/types/enrollment";
+import { ErrorComponent } from "../Errors/error";
 
 interface Props {
   setActiveTab: (tab: string) => void;

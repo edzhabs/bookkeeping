@@ -21,20 +21,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import newEnrollmentSchema from "@/lib/validation/NewStudentEnrollment";
-import { EnrollNewStudent } from "@/types/enrollment";
-import { useState } from "react";
 import CONSTANTS from "@/constants/constants";
-import { formatDisplayGradeLevel } from "@/utils";
+import newEnrollmentSchema from "@/lib/validation/NewStudentEnrollment";
+import { EnrollStudent } from "@/types/enrollment";
+import { capitalFirstLetter, formatDisplayGradeLevel } from "@/utils";
+import { useEffect, useState } from "react";
 
 interface StudentFormProps {
+  isEdit: boolean;
+  initialData: EnrollStudent | undefined;
   setActiveTab: (tab: string) => void;
-  setEnrollmentData: (data: EnrollNewStudent) => void;
+  setEnrollmentData: (data: EnrollStudent) => void;
 }
 
 type FormValues = z.infer<typeof newEnrollmentSchema>;
 
 const StudentInfoForm = ({
+  isEdit,
+  initialData,
   setActiveTab,
   setEnrollmentData,
 }: StudentFormProps) => {
@@ -64,6 +68,36 @@ const StudentInfoForm = ({
     },
   });
 
+  useEffect(() => {
+    if (!isEdit || !initialData?.student) return;
+
+    const gender = capitalFirstLetter(initialData.student.gender || "Male") as
+      | "Male"
+      | "Female";
+    studentForm.reset({
+      first_name: initialData.student.first_name,
+      middle_name: initialData.student.middle_name,
+      last_name: initialData.student.last_name,
+      suffix: initialData.student.suffix || "",
+      gender: gender,
+      birthdate: initialData.student.birthdate
+        ? initialData.student.birthdate.slice(0, 10)
+        : "",
+      address: initialData.student.address,
+      contact_numbers: initialData.student.contact_numbers,
+      school_year: initialData.school_year,
+      grade_level: initialData.grade_level,
+      living_with: initialData.student.living_with || "",
+      father_name: initialData.student.father_name || "",
+      father_job: initialData.student.father_job || "",
+      father_education: initialData.student.father_education || "",
+      mother_name: initialData.student.mother_name || "",
+      mother_job: initialData.student.mother_job || "",
+      mother_education: initialData.student.mother_education || "",
+    });
+    setContactNumbers(initialData.student.contact_numbers || []);
+  }, [isEdit, initialData, studentForm]);
+
   const addContactNumber = () => {
     if (newContactNumber.trim() === "") return;
 
@@ -81,7 +115,7 @@ const StudentInfoForm = ({
   };
 
   const handleStudentSubmit = (values: FormValues) => {
-    const enrollment: EnrollNewStudent = {
+    const enrollment: EnrollStudent = {
       student: {
         first_name: values.first_name,
         middle_name: values.middle_name,
@@ -180,20 +214,38 @@ const StudentInfoForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gender *</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl className="w-full">
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Male">Male</SelectItem>
-                        <SelectItem value="Female">Female</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isEdit && field.value && (
+                      <Select
+                        value={field.value}
+                        onValueChange={(val) => field.onChange(val)}
+                      >
+                        <FormControl className="w-full">
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {!isEdit && (
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl className="w-full">
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Male">Male</SelectItem>
+                          <SelectItem value="Female">Female</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -251,27 +303,50 @@ const StudentInfoForm = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Grade Level *</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl className="w-full">
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select grade level" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {CONSTANTS.GRADELEVELS.map((grade) => (
-                        <SelectItem
-                          className="capitalize"
-                          key={grade}
-                          value={grade}
-                        >
-                          {formatDisplayGradeLevel(grade)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEdit && field.value && (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl className="w-full">
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select grade level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CONSTANTS.GRADELEVELS.map((grade) => (
+                          <SelectItem
+                            className="capitalize"
+                            key={grade}
+                            value={grade}
+                          >
+                            {formatDisplayGradeLevel(grade)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  {!isEdit && (
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl className="w-full">
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select grade level" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {CONSTANTS.GRADELEVELS.map((grade) => (
+                          <SelectItem
+                            className="capitalize"
+                            key={grade}
+                            value={grade}
+                          >
+                            {formatDisplayGradeLevel(grade)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+
                   <FormMessage />
                 </FormItem>
               )}
@@ -322,7 +397,7 @@ const StudentInfoForm = ({
                   </Badge>
                 );
               })}
-              {studentForm.getValues("contact_numbers").length === 0 && (
+              {contactNumbers.length === 0 && (
                 <span className="text-sm text-muted-foreground">
                   No contact numbers added
                 </span>

@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { IStudentFullName } from "./types/student";
 
 export const capitalFirstLetter = (text: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
@@ -55,17 +56,14 @@ export const formatDisplayGradeLevel = (grade_level: string) => {
     .join(" ");
 };
 
-export const getStudentDisplayName = (
-  student:
-    | {
-        first_name: string;
-        middle_name: string;
-        last_name: string;
-        suffix: string;
-      }
-    | undefined
-) => {
+export const formatFullNameLastFirst = (student: IStudentFullName) => {
   return `${student?.last_name}, ${student?.first_name} ${
     student?.middle_name || ""
   } ${student?.suffix || ""}`.trim();
+};
+
+export const formatFullName = (student: IStudentFullName) => {
+  return `${student.first_name} ${
+    student.middle_name ? student.middle_name + " " : ""
+  }${student.last_name} ${student.suffix}`.trim();
 };

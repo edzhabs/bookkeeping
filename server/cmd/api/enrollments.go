@@ -21,6 +21,7 @@ const (
 	enrollment_months               = 10
 	enrollmentID                    = "enrollmentID"
 	enrollmentCtx     enrollmentKey = "enrollment"
+	editEnrollmentCtx enrollmentKey = "edit_enrollment"
 )
 
 type CreateNewEnrollmentPayload struct {
@@ -196,7 +197,7 @@ func (app *application) getEnrollmentsHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) getEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
-	enrollment := app.getStudentFromCtx(r)
+	enrollment := app.getEnrollmentFromCtx(r)
 
 	if err := utils.ResponseJSON(w, http.StatusOK, enrollment); err != nil {
 		app.internalServerError(w, r, err)
@@ -204,7 +205,16 @@ func (app *application) getEnrollmentHandler(w http.ResponseWriter, r *http.Requ
 	}
 }
 
-func (app *application) studentContextMiddleware(next http.Handler) http.Handler {
+func (app *application) getEditEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
+	enrollment := app.getEditEnrollmentFromCtx(r)
+
+	if err := utils.ResponseJSON(w, http.StatusOK, enrollment); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}
+
+func (app *application) enrollmentContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idString := chi.URLParam(r, enrollmentID)
 		id, err := uuid.Parse(idString)
@@ -215,7 +225,7 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 
 		ctx := r.Context()
 
-		enrollment, err := app.store.Enrollments.GetStudentByID(ctx, id)
+		enrollment, err := app.store.Enrollments.GetEnrollmentByID(ctx, id)
 		if err != nil {
 			switch err {
 			case store.ErrNotFound:
@@ -231,8 +241,40 @@ func (app *application) studentContextMiddleware(next http.Handler) http.Handler
 	})
 }
 
-func (app *application) getStudentFromCtx(r *http.Request) models.EnrollmentStudentDetails {
+func (app *application) editEnrollmentContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idString := chi.URLParam(r, enrollmentID)
+		id, err := uuid.Parse(idString)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		enrollment, err := app.store.Enrollments.GetEditEnrollmentDetails(ctx, id)
+		if err != nil {
+			switch err {
+			case store.ErrNotFound:
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, editEnrollmentCtx, enrollment)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) getEnrollmentFromCtx(r *http.Request) models.EnrollmentStudentDetails {
 	enrollment, _ := r.Context().Value(enrollmentCtx).(models.EnrollmentStudentDetails)
+	return enrollment
+}
+
+func (app *application) getEditEnrollmentFromCtx(r *http.Request) models.EditEnrollmentDetails {
+	enrollment, _ := r.Context().Value(editEnrollmentCtx).(models.EditEnrollmentDetails)
 	return enrollment
 }
 

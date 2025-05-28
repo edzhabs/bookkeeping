@@ -28,7 +28,8 @@ type Storage struct {
 	Enrollments interface {
 		Create(ctx context.Context, enrollment *models.Enrollment) error
 		GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error)
-		GetStudentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error)
+		GetEnrollmentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error)
+		GetEditEnrollmentDetails(ctx context.Context, id uuid.UUID) (models.EditEnrollmentDetails, error)
 	}
 }
 

@@ -73,9 +73,8 @@ func (app *application) mount() http.Handler {
 			r.Post("/existing", app.createOldEnrollmentHandler)
 
 			r.Route("/{enrollmentID}", func(r chi.Router) {
-				r.Use(app.studentContextMiddleware)
-
-				r.Get("/", app.getEnrollmentHandler)
+				r.With(app.enrollmentContextMiddleware).Get("/", app.getEnrollmentHandler)
+				r.With(app.editEnrollmentContextMiddleware).Get("/edit", app.getEditEnrollmentHandler)
 			})
 		})
 

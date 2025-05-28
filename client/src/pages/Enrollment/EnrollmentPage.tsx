@@ -21,7 +21,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchEnrollment } from "@/services/enrollments";
 import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
-import { TableError } from "@/components/Errors/table-error";
+import { ErrorComponent } from "@/components/Errors/error";
 
 const visibleColumns = {
   full_name: true,
@@ -104,7 +104,7 @@ export default function EnrollmentPage() {
     table.getColumn("full_name")?.setFilterValue(value);
   };
 
-  if (isError) return <TableError />;
+  if (isError) return <ErrorComponent />;
 
   return (
     <>
@@ -126,7 +126,9 @@ export default function EnrollmentPage() {
           <LucideSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <DebouncedInput
             type="text"
-            value={table.getColumn("full_name")?.getFilterValue() as string}
+            value={
+              (table.getColumn("full_name")?.getFilterValue() as string) ?? ""
+            }
             placeholder="Search name.."
             onChange={handleSearch}
             className="w-full pl-10"

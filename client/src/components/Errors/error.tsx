@@ -1,6 +1,6 @@
 import { AlertCircle } from "lucide-react";
 
-export function TableError({ message }: { message?: string }) {
+export function ErrorComponent({ message }: { message?: string }) {
   return (
     <div className="flex w-full items-center justify-center rounded-lg border border-destructive/20 bg-destructive/5 p-6 text-center shadow-sm">
       <div className="flex flex-col items-center gap-2">

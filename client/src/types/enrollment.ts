@@ -1,4 +1,4 @@
-import { Student } from "./student";
+import { IGradeLevel, Student } from "./student";
 
 export interface EnrollmentTable {
   id: string;
@@ -18,12 +18,19 @@ export interface StudentEnrollmentDetails extends EnrollmentTable {
   student: Student;
 }
 
-export interface EnrollStudent {
+interface DiscountTypes {
+  isRankOne?: boolean;
+  hasSiblingDiscount?: boolean;
+  hasWholeYearDiscount?: boolean;
+  hasScholarDiscount?: boolean;
+}
+
+export interface EnrollStudent extends DiscountTypes {
   student?: Student;
   student_id?: string;
   school_year: string;
   type: "old" | "new";
-  grade_level: string;
+  grade_level: IGradeLevel;
   monthly_tuition: number;
   enrollment_fee: number;
   misc_fee: number;

@@ -16,18 +16,20 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useEffect, useState } from "react";
 import feesFormSchema from "@/lib/validation/TuitionFeeSchema";
-import { EnrollNewStudent } from "@/types/enrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import TuitionBreakdown from "../tuition-breakdown";
 
 interface TuitionFeeFormProps {
-  enrollmentData: EnrollNewStudent;
+  enrollmentData: EnrollStudent;
   discountAmount: number;
   rankOneDiscountAmount: number;
   siblingDiscountAmount: number;
   fullYearDiscountAmount: number;
   scholarDiscountAmount: number;
   totalAmount: number;
-  setEnrollmentData: (data: EnrollNewStudent) => void;
+  isEdit: boolean;
+  initialData: EnrollStudent | undefined;
+  setEnrollmentData: (data: EnrollStudent) => void;
   setActiveTab: (tab: string) => void;
   setDiscountAmount: (amount: number) => void;
   setTotalAmount: (total: number) => void;
@@ -46,6 +48,8 @@ const TuitionFeeForm = ({
   fullYearDiscountAmount,
   scholarDiscountAmount,
   totalAmount,
+  isEdit,
+  initialData,
   setEnrollmentData,
   setActiveTab,
   setDiscountAmount,
@@ -57,6 +61,7 @@ const TuitionFeeForm = ({
   setSiblingDiscountAmount,
 }: TuitionFeeFormProps) => {
   const [discounts, setDiscounts] = useState<string[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const feesForm = useForm<z.infer<typeof feesFormSchema>>({
     resolver: zodResolver(feesFormSchema),
@@ -72,6 +77,89 @@ const TuitionFeeForm = ({
       hasScholarDiscount: false,
     },
   });
+
+  useEffect(() => {
+    if (!isEdit || !initialData) return;
+
+    feesForm.reset({
+      enrollment_fee: initialData.enrollment_fee,
+      monthly_tuition: initialData.monthly_tuition,
+      misc_fee: initialData.misc_fee,
+      pta_fee: initialData.pta_fee,
+      lms_books_fee: initialData.lms_books_fee,
+      isRankOne: initialData.isRankOne,
+      hasSiblingDiscount: initialData.hasSiblingDiscount,
+      hasWholeYearDiscount: initialData.hasWholeYearDiscount,
+      hasScholarDiscount: initialData.hasScholarDiscount,
+    });
+
+    setIsInitialized(true); // trigger calculation once
+  }, [feesForm, isEdit, initialData]);
+
+  useEffect(() => {
+    if (!isInitialized) return;
+    setIsInitialized(false);
+
+    feesForm.trigger();
+  }, [isInitialized, feesForm]);
+
+  useEffect(() => {
+    if (!isEdit || !initialData) return;
+
+    const monthlyTuition = Number(initialData.monthly_tuition) || 0;
+    const totalTuition = monthlyTuition * 10;
+    setTotalTuitionFee(totalTuition);
+
+    let quipperDiscountAmount = 0;
+    let siblingDiscountAmount = 0;
+    let fullYearDiscountAmount = 0;
+    let scholarDiscountAmount = 0;
+    const discounts: string[] = [];
+
+    if (initialData.isRankOne) {
+      quipperDiscountAmount = Number(initialData.lms_books_fee);
+      discounts.push("rank_1");
+    }
+
+    if (initialData.hasSiblingDiscount) {
+      siblingDiscountAmount = totalTuition * 0.05;
+      discounts.push("sibling");
+    }
+
+    if (initialData.hasWholeYearDiscount) {
+      fullYearDiscountAmount = monthlyTuition;
+      discounts.push("full_year");
+    }
+
+    if (initialData.hasScholarDiscount) {
+      scholarDiscountAmount = totalTuition * 0.5;
+      discounts.push("scholar");
+    }
+
+    const totalDiscountAmount =
+      quipperDiscountAmount +
+      siblingDiscountAmount +
+      fullYearDiscountAmount +
+      scholarDiscountAmount;
+
+    setRankOneDiscountAmount(quipperDiscountAmount);
+    setSiblingDiscountAmount(siblingDiscountAmount);
+    setFullYearDiscountAmount(fullYearDiscountAmount);
+    setScholarDiscountAmount(scholarDiscountAmount);
+
+    setDiscountAmount(totalDiscountAmount);
+    setDiscounts(discounts);
+
+    const totalAmount =
+      (Number(initialData.enrollment_fee) || 0) +
+      totalTuition +
+      (Number(initialData.misc_fee) || 0) +
+      (Number(initialData.pta_fee) || 0) +
+      (Number(initialData.lms_books_fee) || 0) -
+      totalDiscountAmount;
+
+    setTotalAmount(totalAmount);
+  }, [initialData, isEdit]);
 
   const watchedValues = useWatch({
     control: feesForm.control,
@@ -168,7 +256,7 @@ const TuitionFeeForm = ({
   const handleFeesSubmit = (values: z.infer<typeof feesFormSchema>) => {
     if (!enrollmentData) return;
 
-    const updatedStudent: EnrollNewStudent = {
+    const updatedStudent: EnrollStudent = {
       ...enrollmentData,
       discounts: discounts,
       enrollment_fee: values.enrollment_fee,
@@ -177,6 +265,8 @@ const TuitionFeeForm = ({
       misc_fee: values.misc_fee,
       pta_fee: values.pta_fee,
     };
+
+    console.log(updatedStudent);
 
     setEnrollmentData(updatedStudent);
     setActiveTab("tuition");

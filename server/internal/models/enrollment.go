@@ -61,3 +61,19 @@ type EnrollmentStudentDetails struct {
 	PaymentStatus   string          `json:"payment_status"`
 	Student         *Student        `json:"student"`
 }
+
+type EditEnrollmentDetails struct {
+	ID                   uuid.UUID       `json:"id"`
+	Student              *Student        `json:"student"`
+	GradeLevel           string          `json:"grade_level"`
+	SchoolYear           string          `json:"school_year"`
+	MonthlyTuition       decimal.Decimal `json:"monthly_tuition"`
+	EnrollmentFee        decimal.Decimal `json:"enrollment_fee"`
+	MiscFee              decimal.Decimal `json:"misc_fee"`
+	PtaFee               decimal.Decimal `json:"pta_fee"`
+	LmsFee               decimal.Decimal `json:"lms_books_fee"`
+	IsRankOne            bool            `json:"isRankOne"`
+	HasSiblingDiscount   bool            `json:"hasSiblingDiscount"`
+	HasWholeYearDiscount bool            `json:"hasWholeYearDiscount"`
+	HasScholarDiscount   bool            `json:"hasScholarDiscount"`
+}

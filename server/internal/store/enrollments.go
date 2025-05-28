@@ -16,7 +16,7 @@ type EnrollmentStore struct {
 	db *sql.DB
 }
 
-func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error) {
+func (s *EnrollmentStore) GetEnrollmentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error) {
 	query := `
 		SELECT
 	  e.id,
@@ -114,6 +114,111 @@ func (s *EnrollmentStore) GetStudentByID(ctx context.Context, id uuid.UUID) (mod
 		&enrollment.TotalPaid,
 		&enrollment.RemainingAmount,
 		&enrollment.PaymentStatus,
+	)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			return enrollment, ErrNotFound
+		default:
+			return enrollment, err
+		}
+	}
+
+	return enrollment, nil
+}
+
+func (s *EnrollmentStore) GetEditEnrollmentDetails(ctx context.Context, id uuid.UUID) (models.EditEnrollmentDetails, error) {
+	query := `
+		SELECT
+	  e.id,
+	  s.id,
+	  s.first_name,
+	  s.middle_name,
+	  s.last_name,
+	  s.suffix,
+      TRIM(CONCAT_WS(' ',
+        s.first_name,
+        CASE
+          WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
+          THEN LEFT(s.middle_name, 1) || '.'
+          ELSE NULL
+        END,
+        s.last_name,
+        s.suffix
+      )) AS full_name,
+	  s.gender,
+	  s.birthdate,
+	  s.address,
+	  s.mother_name,
+	  s.mother_job,
+	  s.mother_education,
+	  s.father_name,
+	  s.father_job,
+	  s.father_education,
+	  s.living_with,
+	  s.contact_numbers,
+	  e.grade_level,
+	  e.school_year,
+	  e.enrollment_fee,
+	  e.monthly_tuition,
+	  e.misc_fee,
+	  e.pta_fee,
+	  e.lms_books_fee,
+	  bool_or(d.type = 'rank_1') AS "isRankOne",
+	  bool_or(d.type = 'sibling') AS "hasSiblingDiscount",
+	  bool_or(d.type = 'full_year') AS "hasWholeYearDiscount",
+	  bool_or(d.type = 'scholar') AS "hasScholarDiscount"
+    FROM enrollments e
+    LEFT JOIN discounts d ON d.enrollment_id = e.id AND d.deleted_at IS NULL
+	LEFT JOIN tuition_payments tp ON tp.enrollment_id = e.id AND tp.deleted_at IS NULL
+    LEFT JOIN students s ON s.id = e.student_id AND s.deleted_at IS NULL
+    WHERE e.deleted_at IS NULL AND e.id = $1
+	GROUP BY e.id, s.id, s.first_name, s.middle_name, s.last_name, s.suffix, e.type, e.school_year, e.grade_level,
+	  s.gender, s.birthdate, s.address, s.mother_name, s.mother_job, s.mother_education, s.father_name, s.father_job,
+	  s.father_education, s.living_with, s.contact_numbers, e.monthly_tuition, e.months, e.enrollment_fee, e.misc_fee,
+	  e.pta_fee, e.lms_books_fee
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	var enrollment models.EditEnrollmentDetails
+	enrollment.Student = new(models.Student)
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		id,
+	).Scan(
+		&enrollment.ID,
+		&enrollment.Student.ID,
+		&enrollment.Student.FirstName,
+		&enrollment.Student.MiddleName,
+		&enrollment.Student.LastName,
+		&enrollment.Student.Suffix,
+		&enrollment.Student.FullName,
+		&enrollment.Student.Gender,
+		&enrollment.Student.Birthdate,
+		&enrollment.Student.Address,
+		&enrollment.Student.MotherName,
+		&enrollment.Student.MotherJob,
+		&enrollment.Student.MotherEducation,
+		&enrollment.Student.FatherName,
+		&enrollment.Student.FatherJob,
+		&enrollment.Student.FatherEducation,
+		&enrollment.Student.LivingWith,
+		pq.Array(&enrollment.Student.ContactNumbers),
+		&enrollment.GradeLevel,
+		&enrollment.SchoolYear,
+		&enrollment.EnrollmentFee,
+		&enrollment.MonthlyTuition,
+		&enrollment.MiscFee,
+		&enrollment.PtaFee,
+		&enrollment.LmsFee,
+		&enrollment.IsRankOne,
+		&enrollment.HasSiblingDiscount,
+		&enrollment.HasWholeYearDiscount,
+		&enrollment.HasScholarDiscount,
 	)
 	if err != nil {
 		switch err {

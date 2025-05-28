@@ -32,3 +32,10 @@ export interface StudentDropdown {
 }
 
 export type IGradeLevel = (typeof CONSTANTS.GRADELEVELS)[number];
+
+export interface IStudentFullName {
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  suffix: string;
+}

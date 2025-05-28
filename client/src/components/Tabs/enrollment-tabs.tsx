@@ -8,7 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import EnrollmentTabLists from "./enrollment-tabList";
 import TuitionFeeTab from "./tuitionFee-tab";
 
-const EnrollmentTabs = () => {
+interface Props {
+  isEdit?: boolean;
+  data?: EnrollStudent;
+}
+
+const EnrollmentTabs = ({ isEdit = false, data }: Props) => {
   const [activeTab, setActiveTab] = useState("student");
   const [enrollmentData, setEnrollmentData] = useState<EnrollStudent | null>(
     null
@@ -36,13 +41,17 @@ const EnrollmentTabs = () => {
             <StudentInfoForm
               setActiveTab={setActiveTab}
               setEnrollmentData={setEnrollmentData}
+              isEdit={isEdit}
+              initialData={data}
             />
           </CardContent>
         </Card>
       </div>
 
       <TuitionFeeTab
+        isEdit={isEdit}
         enrollmentData={enrollmentData}
+        initialData={data}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         setEnrollmentData={setEnrollmentData}
