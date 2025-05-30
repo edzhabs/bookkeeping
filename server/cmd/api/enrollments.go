@@ -20,6 +20,7 @@ type enrollmentKey string
 const (
 	enrollment_months               = 10
 	enrollmentID                    = "enrollmentID"
+	enrollmentIDCtx   enrollmentKey = "enrollment_id"
 	enrollmentCtx     enrollmentKey = "enrollment"
 	editEnrollmentCtx enrollmentKey = "edit_enrollment"
 )
@@ -47,21 +48,22 @@ type Enrollment struct {
 }
 
 type Student struct {
-	FirstName       string   `json:"first_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
-	MiddleName      string   `json:"middle_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
-	LastName        string   `json:"last_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
-	Suffix          string   `json:"suffix" validate:"omitempty,alpha_with_spaces,max=10"`
-	Gender          string   `json:"gender" validate:"oneofci=male female"`
-	Birthdate       string   `json:"birthdate" validate:"required,validBirthdate"`
-	Address         string   `json:"address" validate:"required,max=100"`
-	MotherName      string   `json:"mother_name" validate:"omitempty,alpha_with_spaces,trimmedSpace,max=100"`
-	MotherJob       string   `json:"mother_job" validate:"omitempty,max=100"`
-	MotherEducation string   `json:"mother_education" validate:"omitempty,max=100"`
-	FatherName      string   `json:"father_name" validate:"omitempty,alpha_with_spaces,trimmedSpace,max=100"`
-	FatherJob       string   `json:"father_job" validate:"omitempty,max=100"`
-	FatherEducation string   `json:"father_education" validate:"omitempty,max=100"`
-	ContactNumbers  []string `json:"contact_numbers"`
-	LivingWith      string   `json:"living_with" validate:"omitempty,max=100"`
+	ID              uuid.UUID `json:"id" validate:"omitempty"`
+	FirstName       string    `json:"first_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
+	MiddleName      string    `json:"middle_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
+	LastName        string    `json:"last_name" validate:"required,alpha_with_spaces,trimmedSpace,max=100"`
+	Suffix          string    `json:"suffix" validate:"omitempty,alpha_with_spaces,max=10"`
+	Gender          string    `json:"gender" validate:"oneofci=male female"`
+	Birthdate       string    `json:"birthdate" validate:"required,validBirthdate"`
+	Address         string    `json:"address" validate:"required,max=100"`
+	MotherName      string    `json:"mother_name" validate:"omitempty,alpha_with_spaces,trimmedSpace,max=100"`
+	MotherJob       string    `json:"mother_job" validate:"omitempty,max=100"`
+	MotherEducation string    `json:"mother_education" validate:"omitempty,max=100"`
+	FatherName      string    `json:"father_name" validate:"omitempty,alpha_with_spaces,trimmedSpace,max=100"`
+	FatherJob       string    `json:"father_job" validate:"omitempty,max=100"`
+	FatherEducation string    `json:"father_education" validate:"omitempty,max=100"`
+	ContactNumbers  []string  `json:"contact_numbers"`
+	LivingWith      string    `json:"living_with" validate:"omitempty,max=100"`
 }
 
 func (app *application) createNewEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
@@ -214,14 +216,117 @@ func (app *application) getEditEnrollmentHandler(w http.ResponseWriter, r *http.
 	}
 }
 
-func (app *application) enrollmentContextMiddleware(next http.Handler) http.Handler {
+func (app *application) updateEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
+	var payload CreateNewEnrollmentPayload
+
+	enrollmentID := app.getEnrollmentIDFromCtx(r)
+
+	if err := utils.ReadJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if err := utils.Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	birthdate, err := time.Parse(dateLayout, payload.Student.Birthdate)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// TODO: auth to add user log to know who created this
+	student := &models.Student{
+		ID:              payload.Student.ID,
+		FirstName:       payload.Student.FirstName,
+		MiddleName:      payload.Student.MiddleName,
+		LastName:        payload.Student.LastName,
+		Suffix:          payload.Student.Suffix,
+		Gender:          strings.ToLower(payload.Student.Gender),
+		Birthdate:       birthdate,
+		Address:         payload.Student.Address,
+		MotherName:      payload.Student.MotherName,
+		MotherJob:       payload.Student.MotherJob,
+		MotherEducation: payload.Student.MotherEducation,
+		FatherName:      payload.Student.FatherName,
+		FatherJob:       payload.Student.FatherJob,
+		FatherEducation: payload.Student.FatherEducation,
+		ContactNumbers:  payload.Student.ContactNumbers,
+		LivingWith:      payload.Student.LivingWith,
+	}
+
+	discounts := getDiscounts(payload.AvailDiscounts, payload.MonthlyTuition, payload.LmsFee)
+
+	enrollment := &models.Enrollment{
+		Student:        student,
+		SchoolYear:     payload.SchoolYear,
+		Type:           payload.Type,
+		GradeLevel:     strings.ToLower(payload.GradeLevel),
+		MonthlyTuition: payload.MonthlyTuition,
+		EnrollmentFee:  payload.EnrollmentFee,
+		MiscFee:        payload.MiscFee,
+		PtaFee:         payload.PtaFee,
+		LmsFee:         payload.LmsFee,
+		Discounts:      discounts,
+	}
+
+	if err := app.store.Enrollments.Update(r.Context(), enrollment, enrollmentID); err != nil {
+		switch err {
+		case store.ErrDuplicate:
+			app.badRequestResponse(w, r, err)
+		case store.ErrRequiredFees:
+			app.badRequestResponse(w, r, err)
+		case store.ErrNotFound:
+			app.badRequestResponse(w, r, err)
+		default:
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	if err := utils.ResponseJSON(w, http.StatusOK, enrollment); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+}
+
+func (app *application) deleteEnrollmentHandler(w http.ResponseWriter, r *http.Request) {
+	enrollmentID := app.getEnrollmentIDFromCtx(r)
+
+	if err := app.store.Enrollments.Delete(r.Context(), enrollmentID); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (app *application) enrollmentIDfromURLContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		idString := chi.URLParam(r, enrollmentID)
+
+		if err := uuid.Validate(idString); err != nil {
+			app.badRequestResponse(w, r, err)
+			return
+		}
+
 		id, err := uuid.Parse(idString)
 		if err != nil {
 			app.internalServerError(w, r, err)
 			return
 		}
+
+		ctx := context.WithValue(r.Context(), enrollmentIDCtx, id)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func (app *application) enrollmentContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := app.getEnrollmentIDFromCtx(r)
 
 		ctx := r.Context()
 
@@ -243,12 +348,7 @@ func (app *application) enrollmentContextMiddleware(next http.Handler) http.Hand
 
 func (app *application) editEnrollmentContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		idString := chi.URLParam(r, enrollmentID)
-		id, err := uuid.Parse(idString)
-		if err != nil {
-			app.internalServerError(w, r, err)
-			return
-		}
+		id := app.getEnrollmentIDFromCtx(r)
 
 		ctx := r.Context()
 
@@ -266,6 +366,11 @@ func (app *application) editEnrollmentContextMiddleware(next http.Handler) http.
 		ctx = context.WithValue(ctx, editEnrollmentCtx, enrollment)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+func (app *application) getEnrollmentIDFromCtx(r *http.Request) uuid.UUID {
+	id, _ := r.Context().Value(enrollmentIDCtx).(uuid.UUID)
+	return id
 }
 
 func (app *application) getEnrollmentFromCtx(r *http.Request) models.EnrollmentStudentDetails {

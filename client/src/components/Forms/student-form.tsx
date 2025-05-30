@@ -133,7 +133,6 @@ const StudentInfoForm = ({
         mother_job: values.mother_job || "",
         mother_education: values.mother_education || "",
       },
-      type: "new",
       school_year: values.school_year,
       grade_level: values.grade_level,
       discounts: [],
@@ -143,6 +142,13 @@ const StudentInfoForm = ({
       monthly_tuition: 0,
       pta_fee: 0,
     };
+
+    if (isEdit && enrollment.student) {
+      enrollment.student.id = initialData?.student?.id;
+      enrollment.type = initialData?.type;
+    } else {
+      enrollment.type = "new";
+    }
     setEnrollmentData(enrollment);
     setActiveTab("fees");
   };

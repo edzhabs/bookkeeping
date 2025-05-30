@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 
 interface RecordNotFoundProps {
   entityType?:
-    | "student"
+    | "enrollment"
     | "tuition"
     | "payment"
     | "transaction"
@@ -23,12 +23,12 @@ interface RecordNotFoundProps {
 }
 
 const entityConfig = {
-  student: {
+  enrollment: {
     icon: UserX,
-    title: "Student Not Found",
+    title: "Student Enrollment Not Found",
     description:
-      "The student record you're looking for doesn't exist or has been removed.",
-    listLabel: "View All Students",
+      "The student enrollment record you're looking for doesn't exist or has been removed.",
+    listLabel: "View All Enrollments",
     listHref: "/enrollment",
   },
   tuition: {
@@ -73,7 +73,7 @@ const entityConfig = {
   },
 };
 
-export function NotFoundComponent({
+export function RecordNotFound({
   entityType = "record",
   entityName,
   backHref,

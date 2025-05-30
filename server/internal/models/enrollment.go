@@ -65,6 +65,7 @@ type EnrollmentStudentDetails struct {
 type EditEnrollmentDetails struct {
 	ID                   uuid.UUID       `json:"id"`
 	Student              *Student        `json:"student"`
+	Type                 string          `json:"type"`
 	GradeLevel           string          `json:"grade_level"`
 	SchoolYear           string          `json:"school_year"`
 	MonthlyTuition       decimal.Decimal `json:"monthly_tuition"`

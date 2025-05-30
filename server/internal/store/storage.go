@@ -30,6 +30,8 @@ type Storage struct {
 		GetAll(ctx context.Context) ([]models.EnrollmentsTableData, error)
 		GetEnrollmentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error)
 		GetEditEnrollmentDetails(ctx context.Context, id uuid.UUID) (models.EditEnrollmentDetails, error)
+		Update(ctx context.Context, enrollment *models.Enrollment, enrollmentID uuid.UUID) error
+		Delete(ctx context.Context, enrollmentID uuid.UUID) error
 	}
 }
 

@@ -1,37 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { enrollStudent } from "@/services/enrollments";
+import { deleteEnrollment } from "@/services/enrollments";
 import { logActivity } from "@/lib/activity-logger";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useLoading } from "@/context/loading-prover";
 import { AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { EnrollStudent } from "@/types/enrollment";
 
-interface MutationParam {
-  body: EnrollStudent;
-  enrollmentID?: string;
-}
-
-export function useEnrollStudentMutation(isEdit = false) {
+export function useDeleteEnrollmentMutation(
+  first_name: string | undefined,
+  last_name: string | undefined
+) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { showLoading } = useLoading();
 
   return useMutation({
-    mutationFn: ({ body, enrollmentID }: MutationParam) =>
-      enrollStudent(body, enrollmentID),
+    mutationFn: (enrollmentID: string | undefined) =>
+      deleteEnrollment(enrollmentID),
     onMutate: () => {
-      const msg = isEdit ? "Updating Enrollment.." : "Enrolling..";
-      showLoading(msg);
+      showLoading(`Deleting ${first_name} ${last_name}`);
     },
-    onSuccess: (_, resp) => {
-      queryClient.invalidateQueries({ queryKey: ["enrollment"] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["enrollment"], exact: true });
 
       logActivity({
-        action: `${isEdit ? "Updated" : "Created"}`,
+        action: "Deleted",
         entityType: "Tuition",
         entityId: "test tuition id",
-        details: `Created tuition record for ${resp.body.student?.first_name} ${resp.body.student?.last_name} for school year ${resp.body.school_year}`,
+        details: "deleted",
       });
 
       navigate("/enrollment");
@@ -39,14 +35,12 @@ export function useEnrollStudentMutation(isEdit = false) {
       toast.success(
         <>
           <div className="flex items-center gap-2">
-            <AlertTitle className="text-green-600">
-              {isEdit ? "Updating enrollment is" : "Enrollment"} Successful
+            <AlertTitle className="text-rose-400">
+              Enrollment Deleted
             </AlertTitle>
           </div>
-          <AlertDescription className="text-green-700 mt-1">
-            {isEdit
-              ? `The enrollment information of ${resp.body.student?.first_name} ${resp.body.student?.last_name} has been successfully updated.`
-              : "Student has been successfully enrolled with tuition record."}
+          <AlertDescription className="text-rose-500 mt-1">
+            {`The enrollment record of ${first_name} ${last_name} has been successfully deleted`}
           </AlertDescription>
         </>
       );

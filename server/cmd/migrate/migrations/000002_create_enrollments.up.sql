@@ -14,7 +14,7 @@ CREATE TABLE enrollments (
     created_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
     deleted_at TIMESTAMPTZ(0) DEFAULT NULL,
-    UNIQUE(student_id, school_year)
+    UNIQUE(student_id, school_year, deleted_at)
 );
 
 -- Discounts table
@@ -26,7 +26,8 @@ CREATE TABLE discounts (
     amount NUMERIC(10,2),
     created_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMPTZ(0) DEFAULT NULL
+    deleted_at TIMESTAMPTZ(0) DEFAULT NULL,
+    UNIQUE(enrollment_id, type, scope, deleted_at)
 );
 
 -- Create function for the discount validation trigger

@@ -2,29 +2,29 @@ import { EnrollStudent } from "@/types/enrollment";
 import { useState } from "react";
 
 import { Tabs } from "@/components/ui/tabs";
-import { useEnrollStudentMutation } from "@/hooks/useEnrollStudentMutation";
 import StudentInfoForm from "../Forms/student-form";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import EnrollmentTabLists from "./enrollment-tabList";
 import TuitionFeeTab from "./tuitionFee-tab";
 
 interface Props {
+  enrollmentData: EnrollStudent | null;
   isEdit?: boolean;
   data?: EnrollStudent;
+  isPending: boolean;
+  setEnrollmentData: (data: EnrollStudent | null) => void;
+  handleSubmit: () => void;
 }
 
-const EnrollmentTabs = ({ isEdit = false, data }: Props) => {
+const EnrollmentTabs = ({
+  isEdit = false,
+  isPending,
+  data,
+  enrollmentData,
+  setEnrollmentData,
+  handleSubmit,
+}: Props) => {
   const [activeTab, setActiveTab] = useState("student");
-  const [enrollmentData, setEnrollmentData] = useState<EnrollStudent | null>(
-    null
-  );
-
-  const mutation = useEnrollStudentMutation();
-
-  const handleSubmit = async () => {
-    if (!enrollmentData) return;
-    mutation.mutate(enrollmentData);
-  };
 
   return (
     <Tabs value={activeTab} className="space-y-6">
@@ -56,7 +56,7 @@ const EnrollmentTabs = ({ isEdit = false, data }: Props) => {
         setActiveTab={setActiveTab}
         setEnrollmentData={setEnrollmentData}
         handleSubmit={handleSubmit}
-        isPending={mutation.isPending}
+        isPending={isPending}
       />
     </Tabs>
   );

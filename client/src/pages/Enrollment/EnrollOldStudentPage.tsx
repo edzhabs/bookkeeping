@@ -43,7 +43,7 @@ export default function EnrollExistingStudentPage() {
       lms_books_fee: enrollmentData.lms_books_fee,
       discounts: enrollmentData.discounts,
     };
-    mutation.mutate(enrollmentResponse);
+    mutation.mutate({ body: enrollmentResponse });
   };
 
   return (

@@ -48,7 +48,7 @@ func (app *application) mount() http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{env.GetString("CORS_ALLOWED_ORIGIN", "http://localhost:5173")},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: false,
@@ -73,8 +73,12 @@ func (app *application) mount() http.Handler {
 			r.Post("/existing", app.createOldEnrollmentHandler)
 
 			r.Route("/{enrollmentID}", func(r chi.Router) {
+				r.Use(app.enrollmentIDfromURLContextMiddleware)
+
 				r.With(app.enrollmentContextMiddleware).Get("/", app.getEnrollmentHandler)
 				r.With(app.editEnrollmentContextMiddleware).Get("/edit", app.getEditEnrollmentHandler)
+				r.Patch("/", app.updateEnrollmentHandler)
+				r.Delete("/", app.deleteEnrollmentHandler)
 			})
 		})
 

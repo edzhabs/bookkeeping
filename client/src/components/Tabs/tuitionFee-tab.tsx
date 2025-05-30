@@ -7,8 +7,8 @@ import TuitionFeeForm from "../Forms/tuitionFee-form";
 
 interface TuitionProps {
   enrollmentData: EnrollStudent | null;
-  isEdit: boolean;
-  initialData: EnrollStudent | undefined;
+  isEdit?: boolean;
+  initialData?: EnrollStudent | undefined;
   activeTab: string;
   isPending: boolean;
   setEnrollmentData: (data: EnrollStudent) => void;

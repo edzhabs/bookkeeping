@@ -147,13 +147,14 @@ func (s *StudentStore) GetDropdown(ctx context.Context) ([]models.StudentDropdow
 		SELECT s.id, s.first_name, s.middle_name, s.last_name, s.suffix, s.address, e.grade_level, e.school_year
 		FROM students s
 		LEFT JOIN LATERAL (
-			SELECT e.grade_level, e.school_year
+			SELECT e.grade_level, e.school_year, e.created_at
 			FROM enrollments e
 			WHERE e.student_id = s.id AND e.deleted_at IS NULL
 			ORDER BY e.school_year DESC
 			LIMIT 1
 		) e ON true
 		WHERE s.deleted_at IS NULL
+		ORDER BY e.created_at DESC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)

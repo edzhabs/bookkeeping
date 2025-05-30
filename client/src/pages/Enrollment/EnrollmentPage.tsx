@@ -22,6 +22,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchEnrollment } from "@/services/enrollments";
 import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
 import { ErrorComponent } from "@/components/Errors/error";
+import { useLoading } from "@/context/loading-prover";
 
 const visibleColumns = {
   full_name: true,
@@ -38,6 +39,7 @@ const visibleColumns = {
 export default function EnrollmentPage() {
   const header = useContext(HeaderContext);
   const navigate = useNavigate();
+  const { hideLoading } = useLoading();
 
   const [schoolYears, setSchoolYears] = useState<string[]>([]);
   const [schoolYear, setSchoolYear] = useState("All");
@@ -54,6 +56,10 @@ export default function EnrollmentPage() {
     queryKey: ["enrollment"],
     queryFn: fetchEnrollment,
   });
+
+  useEffect(() => {
+    hideLoading();
+  }, [hideLoading]);
 
   useEffect(() => {
     header.setHeaderTitle(NAVTITLE.ENROLLMENTS.title);

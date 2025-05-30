@@ -41,7 +41,8 @@ var addresses = []string{"123 Main St", "456 Oak Ave", "789 Pine Rd", "321 Maple
 var occupations = []string{"Teacher", "Engineer", "Nurse", "Driver", "Vendor", "Farmer", "Carpenter"}
 var educationLevels = []string{"High School", "College", "Vocational", "Elementary", "None"}
 var livingWiths = []string{"Mother", "Father", "Both Parents", "Guardian", "Relatives"}
-var types = []string{"old", "new"}
+
+// var types = []string{"old", "new"}
 var years = []string{"2023-2024", "2024-2025", "2025-2026"}
 var gradeLevels = []string{
 	"nursery-1", "nursery-2", "kinder-1", "kinder-2",
@@ -94,7 +95,7 @@ func generateEnrollments(num int) []*models.Enrollment {
 	for i := 0; i < num; i++ {
 		grade := gradeLevels[rand.Intn(len(gradeLevels))]
 		isGradeSchool := strings.HasPrefix(grade, "grade")
-		studentType := types[rand.Intn(len(types))]
+		studentType := "new"
 
 		// Fees
 		var monthlyTuition, enrollmentFee, miscFee, ptaFee, lmsBooksFee decimal.Decimal

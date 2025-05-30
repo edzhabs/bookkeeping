@@ -29,7 +29,7 @@ export interface EnrollStudent extends DiscountTypes {
   student?: Student;
   student_id?: string;
   school_year: string;
-  type: "old" | "new";
+  type?: "old" | "new";
   grade_level: IGradeLevel;
   monthly_tuition: number;
   enrollment_fee: number;

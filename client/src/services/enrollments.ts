@@ -13,18 +13,43 @@ export const fetchEnrollment = async () => {
   }
 };
 
-export const enrollStudent = async (body: EnrollStudent) => {
+export const enrollStudent = async (
+  body: EnrollStudent | null,
+  enrollmentID?: string
+) => {
   try {
     let response;
-    if (body.type === "new") {
-      response = await axiosClient.post("/enrollments/new", body);
-    }
-
-    if (body.type === "old") {
-      response = await axiosClient.post("/enrollments/existing", body);
+    if (enrollmentID) {
+      response = await axiosClient.patch(`/enrollments/${enrollmentID}`, body);
+    } else {
+      if (body?.type === "new") {
+        response = await axiosClient.post("/enrollments/new", body);
+      }
+      if (body?.type === "old") {
+        response = await axiosClient.post("/enrollments/existing", body);
+      }
     }
 
     return response?.data;
+  } catch (err) {
+    const error = err as AxiosError<APIerror>;
+
+    if (
+      error.response?.data.error === "student with that record already exist"
+    ) {
+      throw new Error(error.response.data.error);
+    } else {
+      console.error("Error enrolling new student", error);
+      throw new Error("Something went wrong while enrolling the student");
+    }
+  }
+};
+
+export const deleteEnrollment = async (enrollmentID: string | undefined) => {
+  try {
+    const response = await axiosClient.delete("/enrollments/" + enrollmentID);
+
+    return response.status;
   } catch (err) {
     const error = err as AxiosError<APIerror>;
 

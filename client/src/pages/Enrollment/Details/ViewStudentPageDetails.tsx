@@ -2,6 +2,7 @@ import { DeleteConfirmation } from "@/components/delete-confirmation";
 import { DeleteVerification } from "@/components/delete-verification";
 import { EditConfirmation } from "@/components/edit-confirmation";
 import { ErrorComponent } from "@/components/Errors/error";
+import { RecordNotFound } from "@/components/Errors/record-notFound";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLoading } from "@/context/loading-prover";
-import { logActivity } from "@/lib/activity-logger";
+import { useDeleteEnrollmentMutation } from "@/hooks/useDeleteEnrollmentMutation";
 import { fetchEnrollmentDetails } from "@/services/enrollments";
 import type { ActivityLogItem } from "@/types/activity-log";
 import { StudentEnrollmentDetails } from "@/types/enrollment";
@@ -42,6 +43,7 @@ import {
   formatToCurrency,
 } from "@/utils";
 import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 import {
   ArrowLeft,
   BookOpen,
@@ -57,7 +59,6 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { toast } from "sonner";
 
 // Sample activity logs
 const sampleActivityLogs: ActivityLogItem[] = [
@@ -92,7 +93,7 @@ export default function StudentDetailsPage() {
 
   const [tuitions, setTuitions] = useState<Tuition[]>([]);
 
-  const { data, isLoading, isError } = useQuery<{
+  const { data, isLoading, isError, error } = useQuery<{
     data: StudentEnrollmentDetails;
   }>({
     queryKey: ["enrollment", params.id],
@@ -141,31 +142,36 @@ export default function StudentDetailsPage() {
     navigate(`/tuitions/${tuitionId}/payment`);
   };
 
+  const mutation = useDeleteEnrollmentMutation(
+    enrollment?.student.first_name,
+    enrollment?.student.last_name
+  );
+
   const handleDeleteVerificationConfirm = async () => {
     setShowDeleteVerification(false);
     showLoading("Deleting student record...");
 
-    console.log("deleted");
+    mutation.mutate(params.id);
   };
 
-  if (isError) return <ErrorComponent />;
-
-  if (!enrollment) {
-    return (
-      <div className="container py-8">
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-3xl font-bold">Student Not Found</h1>
-        </div>
-        <p>The requested enrollment.student record could not be found.</p>
-      </div>
-    );
+  if (!enrollment || isError) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      const entity = params.id ? `Enrollment ID: ${params.id}` : undefined;
+      return (
+        <RecordNotFound
+          entityType="enrollment"
+          entityName={entity}
+          backHref="/enrollment"
+          listHref="/enrollment"
+        />
+      );
+    } else {
+      return <ErrorComponent />;
+    }
   }
 
   const studentLogs = sampleActivityLogs.filter(
-    (log) => log.entityId === enrollment.id
+    (log) => log.entityId === enrollment?.id
   );
 
   return (
