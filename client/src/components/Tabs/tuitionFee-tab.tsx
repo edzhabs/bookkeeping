@@ -2,14 +2,16 @@ import { useState } from "react";
 import TuitionSummaryForm from "../Forms/tuitionSummary-form";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-import { EnrollNewStudent } from "@/types/enrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import TuitionFeeForm from "../Forms/tuitionFee-form";
 
 interface TuitionProps {
-  enrollmentData: EnrollNewStudent | null;
-  setEnrollmentData: (data: EnrollNewStudent) => void;
+  enrollmentData: EnrollStudent | null;
+  isEdit?: boolean;
+  initialData?: EnrollStudent | undefined;
   activeTab: string;
   isPending: boolean;
+  setEnrollmentData: (data: EnrollStudent) => void;
   setActiveTab: (tab: string) => void;
   handleSubmit: () => void;
 }
@@ -17,6 +19,8 @@ interface TuitionProps {
 const TuitionFeeTab = ({
   enrollmentData,
   activeTab,
+  isEdit = false,
+  initialData,
   isPending,
   setActiveTab,
   setEnrollmentData,
@@ -38,13 +42,15 @@ const TuitionFeeTab = ({
           <Card>
             <CardHeader>
               <CardTitle>
-                Fees & Discounts for {enrollmentData.student.first_name}{" "}
-                {enrollmentData.student.last_name}
+                Fees & Discounts for {enrollmentData.student?.first_name}{" "}
+                {enrollmentData.student?.last_name}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <TuitionFeeForm
+                isEdit={isEdit}
                 enrollmentData={enrollmentData}
+                initialData={initialData}
                 discountAmount={discountAmount}
                 rankOneDiscountAmount={rankOneDiscountAmount}
                 siblingDiscountAmount={siblingDiscountAmount}
@@ -75,9 +81,9 @@ const TuitionFeeTab = ({
               <CardTitle>
                 Tuition Summary for{" "}
                 <span className="capitalize">
-                  {enrollmentData.student.first_name}{" "}
-                  {enrollmentData.student.last_name}{" "}
-                  {enrollmentData.student.suffix || ""}
+                  {enrollmentData.student?.first_name}{" "}
+                  {enrollmentData.student?.last_name}{" "}
+                  {enrollmentData.student?.suffix || ""}
                 </span>
               </CardTitle>
             </CardHeader>

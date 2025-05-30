@@ -168,6 +168,142 @@
     text-decoration-thickness: 1px;
   }
 
+  /* Custom scrollbar for tables */
+  .table-container {
+    @apply overflow-x-auto max-w-full;
+  }
+
+  .table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .table-container::-webkit-scrollbar-track {
+    @apply bg-slate-100 rounded-md;
+  }
+
+  .table-container::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-md hover:bg-slate-400 transition-colors;
+  }
+
+  /* Responsive table styles */
+  .responsive-table {
+    @apply w-full table-auto border-collapse;
+  }
+
+  .responsive-table th {
+    @apply text-left p-3 bg-slate-50 text-slate-700 font-medium text-sm border-b;
+  }
+
+  .responsive-table td {
+    @apply p-3 border-b text-sm;
+  }
+
+  .responsive-table tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .responsive-table tr:hover td {
+    @apply bg-slate-50;
+  }
+
+  /* Table with fixed height and scrollable body */
+  .scrollable-table-container {
+    @apply overflow-auto max-h-[500px] border rounded-md;
+  }
+
+  /* Utility classes for table cells */
+  .cell-fixed-width {
+    @apply w-32 min-w-[8rem] max-w-[8rem] truncate;
+  }
+
+  .cell-action {
+    @apply w-24 text-right;
+  }
+
+  .cell-status {
+    @apply w-28;
+  }
+
+  .cell-amount {
+    @apply font-medium;
+  }
+
+  /* Custom scrollbar for tabs */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thumb-slate-200 {
+    scrollbar-color: #e2e8f0 transparent;
+  }
+
+  .scrollbar-thumb-slate-200::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  .scrollbar-thumb-slate-200::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thumb-slate-200::-webkit-scrollbar-thumb {
+    background-color: #e2e8f0;
+    border-radius: 3px;
+  }
+
+  /* Responsive tabs */
+  .responsive-tabs {
+    @apply w-full;
+  }
+
+  /* Default tab list style */
+  .responsive-tabs-list {
+    @apply flex flex-wrap border-b mb-4;
+  }
+
+  /* Tab trigger styles */
+  .responsive-tabs-trigger {
+    @apply px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
+  }
+
+  /* Active tab trigger */
+  .responsive-tabs-trigger[data-state="active"] {
+    @apply text-foreground border-b-2 border-primary;
+  }
+
+  /* Tab content container */
+  .responsive-tabs-content {
+    @apply mt-4;
+  }
+
+  /* Compact tabs for small spaces */
+  .compact-tabs [role="tablist"] {
+    /* @apply flex overflow-x-auto pb-2 scrollbar-thin; */
+    @apply flex overflow-x-auto pb-2;
+  }
+
+  .compact-tabs [role="tab"] {
+    @apply whitespace-nowrap flex-shrink-0 px-3 py-1.5 text-xs sm:text-sm;
+  }
+
+  /* Scrollable tabs for many items */
+  .scrollable-tabs [role="tablist"] {
+    @apply flex overflow-x-auto pb-2;
+  }
+
+  .scrollable-tabs [role="tablist"]::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .scrollable-tabs [role="tablist"]::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollable-tabs [role="tablist"]::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full;
+  }
+
   /* Add a custom breakpoint for extra small screens */
   @media (min-width: 480px) {
     .xs\:inline {
@@ -176,6 +312,18 @@
 
     .xs\:block {
       display: block;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .responsive-table th.optional-column,
+    .responsive-table td.optional-column {
+      @apply hidden;
+    }
+
+    .responsive-table th,
+    .responsive-table td {
+      @apply p-2;
     }
   }
 }

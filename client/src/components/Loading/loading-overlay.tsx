@@ -32,6 +32,7 @@ export function LoadingOverlay({
   className,
   variant,
   isLoading = true,
+  message = "LOADING..",
   ...props
 }: LoadingOverlayProps) {
   if (!isLoading) return null;
@@ -47,7 +48,7 @@ export function LoadingOverlay({
       <div className="flex flex-col items-center gap-2">
         <OverlayComponent />
         <p className="text-sm font-medium text-muted-foreground uppercase">
-          Loading..
+          {message}
         </p>
       </div>
     </div>

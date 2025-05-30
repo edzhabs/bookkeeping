@@ -21,7 +21,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchEnrollment } from "@/services/enrollments";
 import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
-import { TableError } from "@/components/Errors/table-error";
+import { ErrorComponent } from "@/components/Errors/error";
+import { useLoading } from "@/context/loading-prover";
 
 const visibleColumns = {
   full_name: true,
@@ -38,6 +39,7 @@ const visibleColumns = {
 export default function EnrollmentPage() {
   const header = useContext(HeaderContext);
   const navigate = useNavigate();
+  const { hideLoading } = useLoading();
 
   const [schoolYears, setSchoolYears] = useState<string[]>([]);
   const [schoolYear, setSchoolYear] = useState("All");
@@ -54,6 +56,10 @@ export default function EnrollmentPage() {
     queryKey: ["enrollment"],
     queryFn: fetchEnrollment,
   });
+
+  useEffect(() => {
+    hideLoading();
+  }, [hideLoading]);
 
   useEffect(() => {
     header.setHeaderTitle(NAVTITLE.ENROLLMENTS.title);
@@ -104,7 +110,7 @@ export default function EnrollmentPage() {
     table.getColumn("full_name")?.setFilterValue(value);
   };
 
-  if (isError) return <TableError />;
+  if (isError) return <ErrorComponent />;
 
   return (
     <>
@@ -126,7 +132,9 @@ export default function EnrollmentPage() {
           <LucideSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
           <DebouncedInput
             type="text"
-            value={table.getColumn("full_name")?.getFilterValue() as string}
+            value={
+              (table.getColumn("full_name")?.getFilterValue() as string) ?? ""
+            }
             placeholder="Search name.."
             onChange={handleSearch}
             className="w-full pl-10"

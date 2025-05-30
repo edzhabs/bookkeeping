@@ -32,6 +32,7 @@ ON students (
   UPPER(last_name),
   birthdate,
   LOWER(gender),
-  COALESCE(suffix, '')
+  COALESCE(suffix, ''),
+  deleted_at
 )
 WHERE deleted_at IS NULL;

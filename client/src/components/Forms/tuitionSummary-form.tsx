@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { EnrollNewStudent } from "@/types/enrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import { useEffect, useState } from "react";
 import TuitionBreakdown from "../tuition-breakdown";
 
 interface TuitionSummaryFormProps {
-  enrollmentData: EnrollNewStudent;
+  enrollmentData: EnrollStudent;
   totalTuitionFee: number;
   rankOneDiscountAmount: number;
   siblingDiscountAmount: number;
@@ -76,8 +76,8 @@ const TuitionSummaryForm = ({
             <div>
               <p className="text-sm font-medium">Student:</p>
               <p className="text-sm capitalize text-muted-foreground">
-                {enrollmentData.student.first_name}{" "}
-                {enrollmentData.student.last_name}
+                {enrollmentData.student?.first_name}{" "}
+                {enrollmentData.student?.last_name}
               </p>
             </div>
             <div>
