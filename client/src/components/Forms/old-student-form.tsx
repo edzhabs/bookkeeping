@@ -9,14 +9,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CONSTANTS from "@/constants/constants";
+import useStudentsQuery from "@/hooks/useStudents";
+import oldEnrollmentSchema from "@/lib/validation/OldStudentEnrollment";
+import { EnrollStudent } from "@/types/enrollment";
 import { IGradeLevel, StudentDropdown } from "@/types/student";
-import { useQuery } from "@tanstack/react-query";
-import { fetchStudentsDropdown } from "@/services/students";
+import { formatDisplayGradeLevel } from "@/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import oldEnrollmentSchema from "@/lib/validation/OldStudentEnrollment";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { ErrorComponent } from "../Errors/error";
 import {
   Form,
   FormControl,
@@ -26,11 +28,8 @@ import {
   FormLabel,
   FormMessage,
 } from "../ui/form";
-import { Separator } from "../ui/separator";
 import { Input } from "../ui/input";
-import { formatDisplayGradeLevel } from "@/utils";
-import { EnrollStudent } from "@/types/enrollment";
-import { ErrorComponent } from "../Errors/error";
+import { Separator } from "../ui/separator";
 
 interface Props {
   setActiveTab: (tab: string) => void;
@@ -40,16 +39,7 @@ interface Props {
 type FormValues = z.infer<typeof oldEnrollmentSchema>;
 
 const OldStudentForm = ({ setEnrollmentData, setActiveTab }: Props) => {
-  const {
-    data: response,
-    isLoading,
-    isError,
-  } = useQuery<{
-    data: StudentDropdown[] | undefined;
-  }>({
-    queryKey: ["students"],
-    queryFn: fetchStudentsDropdown,
-  });
+  const { data: response, isLoading, isError } = useStudentsQuery();
 
   const existingStudents = response?.data;
 

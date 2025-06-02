@@ -303,10 +303,7 @@ func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTable
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(
-		ctx,
-		query,
-	)
+	rows, err := s.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -756,8 +753,6 @@ func (s *EnrollmentStore) updateDiscount(ctx context.Context, tx *sql.Tx, enroll
 		($1, $2, $3, $4, now(), now())
 	ON CONFLICT 
 		(enrollment_id, type, scope)
-	WHERE 
-		deleted_at IS NULL
 	DO UPDATE SET
 		amount = EXCLUDED.amount,
 		updated_at = now(),
@@ -837,8 +832,9 @@ func (s *EnrollmentStore) softDeleteEnrollment(ctx context.Context, tx *sql.Tx, 
 
 func (s *EnrollmentStore) checkStudentOtherEnrollments(ctx context.Context, tx *sql.Tx, studentID uuid.UUID) (bool, error) {
 	query := `
-		SELECT COUNT(1) FROM students
-		WHERE id = $1 AND deleted_at IS NULL
+		SELECT COUNT(1)
+		FROM enrollments
+		WHERE student_id = $1 AND deleted_at IS NULL
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)

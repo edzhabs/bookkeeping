@@ -17,6 +17,10 @@ const CONSTANTS = {
     "grade-6",
     "grade-7",
   ] as const,
+  QUERYKEY: {
+    ENROLLMENT: "enrollment",
+    STUDENTS: "students",
+  },
 };
 
 export default CONSTANTS;

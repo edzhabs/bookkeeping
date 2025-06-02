@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useLoading } from "@/context/loading-prover";
 import { AlertTitle, AlertDescription } from "@/components/ui/alert";
+import CONSTANTS from "@/constants/constants";
 
 export function useDeleteEnrollmentMutation(
   first_name: string | undefined,
@@ -21,7 +22,14 @@ export function useDeleteEnrollmentMutation(
       showLoading(`Deleting ${first_name} ${last_name}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["enrollment"], exact: true });
+      queryClient.invalidateQueries({
+        queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT],
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: [CONSTANTS.QUERYKEY.STUDENTS],
+        exact: true,
+      });
 
       logActivity({
         action: "Deleted",

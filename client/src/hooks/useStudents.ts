@@ -1,12 +1,15 @@
-import Student from "@/entities/student";
-import { fetchStudents } from "@/services/students";
+import CONSTANTS from "@/constants/constants";
+import { fetchStudentsDropdown } from "@/services/students";
+import { StudentDropdown } from "@/types/student";
 import { useQuery } from "@tanstack/react-query";
 
-const useStudents = () => {
-  return useQuery<{ data: Student[] }>({
-    queryKey: ["students"],
-    queryFn: async ({ signal }) => fetchStudents(signal),
+const useStudentsQuery = () => {
+  return useQuery<{
+    data: StudentDropdown[] | undefined;
+  }>({
+    queryKey: [CONSTANTS.QUERYKEY.STUDENTS],
+    queryFn: fetchStudentsDropdown,
   });
 };
 
-export default useStudents;
+export default useStudentsQuery;

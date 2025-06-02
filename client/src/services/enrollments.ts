@@ -3,7 +3,7 @@ import axiosClient from "./api-client";
 import { AxiosError } from "axios";
 import { APIerror } from "@/types/api";
 
-export const fetchEnrollment = async () => {
+export const fetchEnrollments = async () => {
   try {
     const response = await axiosClient.get("/enrollments");
     return response.data;

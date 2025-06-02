@@ -1,7 +1,7 @@
 import { DataTableColumnHeader } from "@/components/Table/Columns/column-header";
 import { DataTableColumnFilter } from "@/components/Table/Columns/filter-header";
 import { Badge } from "@/components/ui/badge";
-import { EnrollmentTable } from "@/types/enrollment";
+import { TuitionsTable } from "@/types/tuition";
 import {
   capitalFirstLetter,
   displayDiscounts,
@@ -10,9 +10,9 @@ import {
 import { ColumnDef } from "@tanstack/react-table";
 import clsx from "clsx";
 
-export const EnrollmentColumns = (
-  enrollments: EnrollmentTable[]
-): ColumnDef<EnrollmentTable>[] => [
+export const TuitionColumns = (
+  tuitions: TuitionsTable[]
+): ColumnDef<TuitionsTable>[] => [
   {
     accessorKey: "full_name",
     header: ({ column }) => (
@@ -24,57 +24,13 @@ export const EnrollmentColumns = (
     },
   },
   {
-    accessorFn: (row) => capitalFirstLetter(row.type),
-    id: "type",
-    header: ({ column }) => (
-      <DataTableColumnFilter
-        column={column}
-        title="Type"
-        options={distinctOptions(enrollments, "type")}
-      />
-    ),
-    cell: ({ getValue }) => (
-      <Badge
-        className={clsx("uppercase w-1/2 h-full", {
-          "bg-green-400": getValue() === "New",
-          "bg-blue-400": getValue() === "Old",
-        })}
-      >
-        {getValue<string>()}
-      </Badge>
-    ),
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    meta: {
-      name: "Type",
-    },
-  },
-  {
-    accessorFn: (row) => capitalFirstLetter(row.gender),
-    id: "gender",
-    header: ({ column }) => (
-      <DataTableColumnFilter
-        column={column}
-        title="Gender"
-        options={distinctOptions(enrollments, "gender")}
-      />
-    ),
-    filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
-    },
-    meta: {
-      name: "Gender",
-    },
-  },
-  {
     accessorFn: (row) => capitalFirstLetter(row.grade_level),
     id: "grade_level",
     header: ({ column }) => (
       <DataTableColumnFilter
         column={column}
         title="Grade Level"
-        options={distinctGradeLevelOptions(enrollments)}
+        options={distinctGradeLevelOptions(tuitions)}
       />
     ),
     filterFn: (row, id, value) => {
@@ -101,7 +57,7 @@ export const EnrollmentColumns = (
         title="Discount"
         options={[
           "None",
-          ...distinctOptions(enrollments, "discount_types").map((discount) =>
+          ...distinctOptions(tuitions, "discount_types").map((discount) =>
             displayDiscounts([discount])
           ),
         ]}
@@ -167,7 +123,7 @@ export const EnrollmentColumns = (
       <DataTableColumnFilter
         column={column}
         title="Status"
-        options={distinctOptions(enrollments, "payment_status")}
+        options={distinctOptions(tuitions, "payment_status")}
       />
     ),
     cell: ({ getValue }) => (
@@ -194,10 +150,10 @@ export const EnrollmentColumns = (
 ];
 
 const distinctOptions = (
-  enrollments: EnrollmentTable[],
-  key: keyof EnrollmentTable
+  tuitions: TuitionsTable[],
+  key: keyof TuitionsTable
 ) => {
-  const values = enrollments.flatMap((enrollment) => {
+  const values = tuitions.flatMap((enrollment) => {
     const value = enrollment[key];
     return Array.isArray(value) ? value : [capitalFirstLetter(value)];
   });
@@ -205,9 +161,7 @@ const distinctOptions = (
   return Array.from(new Set(values));
 };
 
-const distinctGradeLevelOptions = (
-  enrollments: EnrollmentTable[]
-): string[] => {
+const distinctGradeLevelOptions = (tuitions: TuitionsTable[]): string[] => {
   const predefinedOrder = [
     "Nursery-1",
     "Nursery-2",
@@ -216,7 +170,7 @@ const distinctGradeLevelOptions = (
     ...Array.from({ length: 7 }, (_, i) => `Grade-${i + 1}`), // Grade 1 to 6
   ];
 
-  const values = enrollments
+  const values = tuitions
     .map((enrollment) => capitalFirstLetter(enrollment.grade_level))
     .filter((value) => predefinedOrder.includes(value)); // Filter valid options
 

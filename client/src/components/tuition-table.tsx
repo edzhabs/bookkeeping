@@ -32,7 +32,6 @@ import type { ActivityLogItem } from "@/types/activity-log";
 
 interface TuitionTableProps {
   tuitions: Tuition[];
-  onPayClick: (tuition: Tuition) => void;
   onViewClick: (tuitionId: string) => void;
   onStudentClick: (studentId: string) => void;
 }
@@ -78,7 +77,6 @@ const sampleTuitionLogs: ActivityLogItem[] = [
 
 export function TuitionTable({
   tuitions,
-  onPayClick,
   onViewClick,
   onStudentClick,
 }: TuitionTableProps) {
@@ -264,13 +262,6 @@ export function TuitionTable({
                             >
                               <Eye className="mr-2 h-4 w-4" />
                               View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => onPayClick(tuition)}
-                              disabled={tuition.status === "Paid"}
-                            >
-                              <LucideDollarSign className="mr-2 h-4 w-4" />
-                              Make Payment
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>

@@ -2,9 +2,9 @@ import { IGradeLevel, Student } from "./student";
 
 export interface EnrollmentTable {
   id: string;
-  full_name: string;
   type: "old" | "new";
   gender: "male" | "female";
+  full_name: string;
   grade_level: string;
   school_year: string;
   discount_types: string[];

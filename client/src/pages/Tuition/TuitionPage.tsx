@@ -1,113 +1,96 @@
-import { useState } from "react";
-import { LucideSearch } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { DebouncedInput } from "@/components/DebouncedInput";
+import { ErrorComponent } from "@/components/Errors/error";
+import { DataTableViewOptions } from "@/components/Table/Columns/column-options";
+import { TuitionColumns } from "@/components/Table/Columns/tuition-column";
+import { DataTable } from "@/components/custom-table";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { TuitionTable } from "@/components/tuition-table";
-import { PaymentForm } from "@/components/payment-form";
-import type { Tuition } from "@/types/tuition";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { NAVTITLE } from "@/constants/side-menu";
+import { HeaderContext } from "@/context/headerContext";
+import { useLoading } from "@/context/loading-prover";
+import useTable from "@/hooks/useTable";
 import { logActivity } from "@/lib/activity-logger";
+import { fetchTuitions } from "@/services/tuitions";
+import { TuitionsTable } from "@/types/tuition";
+import { useQuery } from "@tanstack/react-query";
+import { LucideSearch } from "lucide-react";
+import { useContext, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-// Sample data for demonstration
-const initialTuitions: Tuition[] = [
-  {
-    id: "1",
-    studentId: "1",
-    studentName: "John Doe",
-    gradeLevel: "Grade 10",
-    discount: "None",
-    discountAmount: 0,
-    schoolYear: "2023-2024",
-    totalAmount: 50000,
-    remainingBalance: 0,
-    dueDate: "2023-09-15",
-    status: "Paid",
-    payments: [
-      {
-        id: "p1",
-        invoiceNumber: "TUI-2023-001",
-        amount: 25000,
-        date: "2023-07-10",
-        method: "Bank Transfer",
-        notes: "First semester payment",
-        reservationFee: 5000,
-        tuitionFee: 20000,
-        advancePayment: 0,
-      },
-      {
-        id: "p2",
-        invoiceNumber: "TUI-2023-015",
-        amount: 25000,
-        date: "2023-11-05",
-        method: "Credit Card",
-        notes: "Second semester payment",
-        reservationFee: 0,
-        tuitionFee: 25000,
-        advancePayment: 0,
-      },
-    ],
-  },
-  {
-    id: "2",
-    studentId: "2",
-    studentName: "Emma Smith",
-    gradeLevel: "Grade 8",
-    discount: "Sibling Discount",
-    discountAmount: 5000,
-    schoolYear: "2023-2024",
-    totalAmount: 45000,
-    remainingBalance: 45000,
-    dueDate: "2023-09-15",
-    status: "Unpaid",
-    payments: [],
-  },
-  {
-    id: "3",
-    studentId: "3",
-    studentName: "Michael Johnson",
-    gradeLevel: "Grade 9",
-    discount: "None",
-    discountAmount: 0,
-    schoolYear: "2023-2024",
-    totalAmount: 45000,
-    remainingBalance: 25000,
-    dueDate: "2023-09-15",
-    status: "Partial",
-    payments: [
-      {
-        id: "p3",
-        invoiceNumber: "TUI-2023-008",
-        amount: 20000,
-        date: "2023-09-05",
-        method: "Cash",
-        notes: "Initial payment",
-        reservationFee: 5000,
-        tuitionFee: 15000,
-        advancePayment: 0,
-      },
-    ],
-  },
-];
+const visibleColumns = {
+  full_name: true,
+  grade_level: true,
+  school_year: true,
+  discount: true,
+  total_amount: true,
+  remaining_amount: true,
+  payment_status: true,
+};
 
 export default function TuitionsPage() {
+  const header = useContext(HeaderContext);
   const navigate = useNavigate();
-  const [tuitions, setTuitions] = useState<Tuition[]>(initialTuitions);
-  const [isPaymentFormOpen, setIsPaymentFormOpen] = useState(false);
-  const [selectedTuition, setSelectedTuition] = useState<Tuition | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
+  const { hideLoading } = useLoading();
 
-  const filteredTuitions = tuitions.filter(
-    (tuition) =>
-      tuition.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tuition.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tuition.schoolYear.toLowerCase().includes(searchTerm.toLowerCase())
+  const [schoolYears, setSchoolYears] = useState<string[]>([]);
+  const [schoolYear, setSchoolYear] = useState("All");
+
+  const {
+    data: tuitions,
+    isLoading,
+    isError,
+  } = useQuery<{
+    data: TuitionsTable[] | undefined;
+  }>({
+    queryKey: ["tuitions"],
+    queryFn: fetchTuitions,
+  });
+
+  useEffect(() => {
+    hideLoading();
+  }, [hideLoading]);
+
+  useEffect(() => {
+    header.setHeaderTitle(NAVTITLE.TUITION.title);
+  }, [header]);
+
+  useEffect(() => {
+    if (tuitions?.data && schoolYears.length === 0) {
+      const distinctYears = Array.from(
+        new Set(tuitions?.data.map((e) => e.school_year))
+      );
+      setSchoolYears(distinctYears);
+    }
+  }, [tuitions, schoolYears]);
+
+  const columns = useMemo(
+    () => TuitionColumns(tuitions?.data || []),
+    [tuitions?.data]
   );
+
+  const { table } = useTable<TuitionsTable>(
+    columns,
+    visibleColumns,
+    tuitions?.data
+  );
+
+  const handleSchoolYear = (value: string) => {
+    setSchoolYear(value);
+    if (value === "All") {
+      table.getColumn("school_year")?.setFilterValue("");
+    } else {
+      table.getColumn("school_year")?.setFilterValue(value);
+    }
+  };
+
+  const handleSearch = (value: string) => {
+    table.getColumn("full_name")?.setFilterValue(value);
+  };
 
   const handlePayment = (
     tuitionId: string,
@@ -175,63 +158,57 @@ export default function TuitionsPage() {
     setSelectedTuition(null);
   };
 
-  const handleViewTuition = (tuitionId: string) => {
+  const handleClick = (tuitionId: string) => {
     navigate(`/tuitions/${tuitionId}`);
   };
 
-  const handleViewStudent = (studentId: string) => {
-    navigate(`/enrollment/${studentId}`);
-  };
-
-  const openPaymentForm = (tuition: Tuition) => {
-    setSelectedTuition(tuition);
-    setIsPaymentFormOpen(true);
-  };
+  if (isError) return <ErrorComponent />;
 
   return (
-    <div className="container py-8">
-      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-3xl font-bold">Tuition Management</h1>
+    <>
+      <div className="mb-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+        {/* Search Input */}
+        <div className="relative w-full sm:w-[300px]">
+          <LucideSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+          <DebouncedInput
+            type="text"
+            value={
+              (table.getColumn("full_name")?.getFilterValue() as string) ?? ""
+            }
+            placeholder="Search name.."
+            onChange={handleSearch}
+            className="w-full pl-10"
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Filter Dropdown */}
+        <Select
+          value={schoolYear}
+          onValueChange={handleSchoolYear}
+          disabled={isLoading}
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter by type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All School Years</SelectItem>
+            {schoolYears.map((year, index) => (
+              <SelectItem key={index} value={year}>
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {/* Visibility */}
+        {!isLoading && <DataTableViewOptions table={table} />}
       </div>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>Tuition Records</CardTitle>
-          <CardDescription>
-            View and manage student tuition payments
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4 flex w-full max-w-sm items-center space-x-2">
-            <Input
-              type="text"
-              placeholder="Search tuitions..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full"
-              icon={<LucideSearch className="h-4 w-4" />}
-            />
-          </div>
-          <TuitionTable
-            tuitions={filteredTuitions}
-            onPayClick={openPaymentForm}
-            onViewClick={handleViewTuition}
-            onStudentClick={handleViewStudent}
-          />
-        </CardContent>
-      </Card>
-
-      {selectedTuition && (
-        <PaymentForm
-          isOpen={isPaymentFormOpen}
-          onClose={() => {
-            setIsPaymentFormOpen(false);
-            setSelectedTuition(null);
-          }}
-          tuition={selectedTuition}
-          onSubmit={handlePayment}
-        />
-      )}
-    </div>
+      <DataTable
+        table={table}
+        handleClick={handleClick}
+        isLoading={isLoading}
+      />
+    </>
   );
 }

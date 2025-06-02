@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useLoading } from "@/context/loading-prover";
 import { AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { EnrollStudent } from "@/types/enrollment";
+import CONSTANTS from "@/constants/constants";
 
 interface MutationParam {
   body: EnrollStudent;
@@ -25,7 +26,9 @@ export function useEnrollStudentMutation(isEdit = false) {
       showLoading(msg);
     },
     onSuccess: (_, resp) => {
-      queryClient.invalidateQueries({ queryKey: ["enrollment"] });
+      queryClient.invalidateQueries({
+        queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT],
+      });
 
       logActivity({
         action: `${isEdit ? "Updated" : "Created"}`,

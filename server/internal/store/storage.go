@@ -33,12 +33,16 @@ type Storage struct {
 		Update(ctx context.Context, enrollment *models.Enrollment, enrollmentID uuid.UUID) error
 		Delete(ctx context.Context, enrollmentID uuid.UUID) error
 	}
+	Tuitions interface {
+		GetAll(ctx context.Context) ([]models.TuitionsTableData, error)
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
 		Students:    &StudentStore{db},
 		Enrollments: &EnrollmentStore{db},
+		Tuitions:    &TuitionStore{db},
 	}
 }
 

@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { RecordNotFound } from "@/components/Errors/record-notFound";
 import { useEnrollStudentMutation } from "@/hooks/useEnrollStudentMutation";
+import CONSTANTS from "@/constants/constants";
 
 export default function EditStudentDetailsPage() {
   const params = useParams();
@@ -22,7 +23,7 @@ export default function EditStudentDetailsPage() {
   const { data, isLoading, isError, error } = useQuery<{
     data: EnrollStudent;
   }>({
-    queryKey: ["enrollment", params.id, "edit"],
+    queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT, params.id, "edit"],
     queryFn: () => fetchEditEnrollmentDetails(params.id),
   });
   const enrollment = data?.data;

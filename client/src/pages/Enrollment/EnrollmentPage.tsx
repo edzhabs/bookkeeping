@@ -19,21 +19,22 @@ import useTable from "@/hooks/useTable";
 import { EnrollmentTable } from "@/types/enrollment";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { fetchEnrollment } from "@/services/enrollments";
+import { fetchEnrollments } from "@/services/enrollments";
 import { EnrollmentTypeModal } from "@/components/enrollment-type-modal";
 import { ErrorComponent } from "@/components/Errors/error";
 import { useLoading } from "@/context/loading-prover";
+import CONSTANTS from "@/constants/constants";
 
 const visibleColumns = {
   full_name: true,
-  type: false,
-  gender: false,
+  type: true,
+  gender: true,
   grade_level: true,
   school_year: true,
   discount: false,
-  total_amount: true,
-  remaining_amount: true,
-  payment_status: true,
+  total_amount: false,
+  remaining_amount: false,
+  payment_status: false,
 };
 
 export default function EnrollmentPage() {
@@ -53,8 +54,8 @@ export default function EnrollmentPage() {
   } = useQuery<{
     data: EnrollmentTable[] | undefined;
   }>({
-    queryKey: ["enrollment"],
-    queryFn: fetchEnrollment,
+    queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT],
+    queryFn: fetchEnrollments,
   });
 
   useEffect(() => {

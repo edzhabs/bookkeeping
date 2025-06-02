@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CONSTANTS from "@/constants/constants";
 import { useLoading } from "@/context/loading-prover";
 import { useDeleteEnrollmentMutation } from "@/hooks/useDeleteEnrollmentMutation";
 import { fetchEnrollmentDetails } from "@/services/enrollments";
@@ -96,7 +97,7 @@ export default function StudentDetailsPage() {
   const { data, isLoading, isError, error } = useQuery<{
     data: StudentEnrollmentDetails;
   }>({
-    queryKey: ["enrollment", params.id],
+    queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT, params.id],
     queryFn: () => fetchEnrollmentDetails(params.id),
   });
   const enrollment = data?.data;

@@ -2,6 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -93,6 +94,22 @@ export function DataTable<TData extends { id: string }>({
               </TableRow>
             )}
           </TableBody>
+          {table.getRowModel().rows?.length > 0 && (
+            <TableFooter>
+              <TableRow>
+                {table.getFooterGroups()[0].headers.map((footer) => (
+                  <TableCell key={footer.id}>
+                    {footer.isPlaceholder
+                      ? null
+                      : flexRender(
+                          footer.column.columnDef.footer,
+                          footer.getContext()
+                        )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </div>
 
