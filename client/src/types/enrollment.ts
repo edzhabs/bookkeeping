@@ -1,4 +1,5 @@
 import { IGradeLevel, Student } from "./student";
+import { DiscountDetails } from "./tuition";
 
 export interface EnrollmentTable {
   id: string;
@@ -8,14 +9,22 @@ export interface EnrollmentTable {
   grade_level: string;
   school_year: string;
   discount_types: string[];
-  total_amount: string;
-  total_paid: string;
-  remaining_amount: string;
-  payment_status: "paid" | "partial" | "unpaid";
+  total_tuition_amount_due: string;
+  total_tuition_paid: string;
+  total_other_paid: string;
+  tuition_balance: string;
+  tuition_payment_status: "paid" | "partial" | "unpaid";
 }
 
 export interface StudentEnrollmentDetails extends EnrollmentTable {
   student: Student;
+  enrollment_fee: string;
+  monthly_tuition: string;
+  misc_fee: string;
+  pta_fee: string;
+  lms_books_fee: string;
+  discount_total_amount: string;
+  discount_details: DiscountDetails[];
 }
 
 interface DiscountTypes {
@@ -31,8 +40,8 @@ export interface EnrollStudent extends DiscountTypes {
   school_year: string;
   type?: "old" | "new";
   grade_level: IGradeLevel;
-  monthly_tuition: number;
   enrollment_fee: number;
+  monthly_tuition: number;
   misc_fee: number;
   pta_fee: number;
   lms_books_fee: number;

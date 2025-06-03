@@ -39,3 +39,15 @@ type StudentDropdown struct {
 	SchoolYear string    `json:"school_year"`
 	GradeLevel string    `json:"grade_level"`
 }
+
+type BaseStudent struct {
+	ID         uuid.UUID `json:"id"`
+	FirstName  string    `json:"first_name"`
+	MiddleName string    `json:"middle_name"`
+	LastName   string    `json:"last_name"`
+	Suffix     string    `json:"suffix"`
+	FullName   string    `json:"full_name"`
+	Gender     string    `json:"gender"`
+	Birthdate  time.Time `json:"birthdate"`
+	Address    string    `json:"address"`
+}

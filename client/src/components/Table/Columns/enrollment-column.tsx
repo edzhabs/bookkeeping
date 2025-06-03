@@ -117,31 +117,56 @@ export const EnrollmentColumns = (
     },
   },
   {
-    accessorFn: (row) => formatToCurrency(row.total_amount),
-    id: "total_amount",
-    header: "Total Amount",
+    accessorFn: (row) => formatToCurrency(row.total_tuition_amount_due),
+    id: "total_tuition_amount_due",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total Due Amount" />
+    ),
     meta: {
-      name: "Total Amount",
+      name: "Total Due Amount",
     },
     footer: ({ table }) => {
       // Sum the raw remaining_amount values
       const total = table
         .getFilteredRowModel()
         .rows.reduce(
-          (sum, row) => sum + (Number(row.original.total_amount) || 0),
+          (sum, row) =>
+            sum + (Number(row.original.total_tuition_amount_due) || 0),
+          0
+        );
+      return <span className="font-semibold">{formatToCurrency(total)}</span>;
+    },
+  },
+  {
+    accessorFn: (row) => formatToCurrency(row.total_tuition_paid),
+    id: "total_tuition_paid",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Total Paid Amount" />
+    ),
+    meta: {
+      name: "Total Paid Amount",
+    },
+    footer: ({ table }) => {
+      // Sum the raw remaining_amount values
+      const total = table
+        .getFilteredRowModel()
+        .rows.reduce(
+          (sum, row) => sum + (Number(row.original.total_tuition_paid) || 0),
           0
         );
       return (
-        <span className="font-semibold text-emerald-500">
+        <span className="font-semibold text-sky-400">
           {formatToCurrency(total)}
         </span>
       );
     },
   },
   {
-    accessorFn: (row) => formatToCurrency(row.remaining_amount),
-    id: "remaining_amount",
-    header: "Balance",
+    accessorFn: (row) => formatToCurrency(row.tuition_balance),
+    id: "tuition_balance",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Balance" />
+    ),
     meta: {
       name: "Balance",
     },
@@ -150,7 +175,7 @@ export const EnrollmentColumns = (
       const total = table
         .getFilteredRowModel()
         .rows.reduce(
-          (sum, row) => sum + (Number(row.original.remaining_amount) || 0),
+          (sum, row) => sum + (Number(row.original.tuition_balance) || 0),
           0
         );
       return (
@@ -161,31 +186,27 @@ export const EnrollmentColumns = (
     },
   },
   {
-    accessorFn: (row) => row.payment_status,
-    id: "payment_status",
+    accessorFn: (row) => row.tuition_payment_status,
+    id: "tuition_payment_status",
     header: ({ column }) => (
       <DataTableColumnFilter
         column={column}
         title="Status"
-        options={distinctOptions(enrollments, "payment_status")}
+        options={distinctOptions(enrollments, "tuition_payment_status")}
       />
     ),
     cell: ({ getValue }) => (
       <Badge
-        className={clsx("capitalize font-medium")}
-        variant={
-          getValue() === "Paid"
-            ? "success"
-            : getValue() === "Partial"
-            ? "warning"
-            : "destructive"
-        }
+        className={`${getStatusColor(
+          (getValue() as string) || ""
+        )} capitalize font-medium`}
       >
-        {getValue<string>()}
+        {getValue<string>() || ""}
       </Badge>
     ),
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id));
+      const cellValue = (row.getValue(id) as string)?.toLowerCase();
+      return value.some((v: string) => v.toLowerCase() === cellValue);
     },
     meta: {
       name: "Status",
@@ -224,4 +245,17 @@ const distinctGradeLevelOptions = (
   return Array.from(new Set(values)).sort(
     (a, b) => predefinedOrder.indexOf(a) - predefinedOrder.indexOf(b)
   );
+};
+
+const getStatusColor = (status: string | undefined) => {
+  switch (status?.toLowerCase()) {
+    case "paid":
+      return "bg-emerald-100 text-emerald-800 hover:bg-emerald-200";
+    case "unpaid":
+      return "bg-red-100 text-red-800 hover:bg-red-200";
+    case "partial":
+      return "bg-amber-100 text-amber-800 hover:bg-amber-200";
+    default:
+      return "bg-slate-100 text-slate-800 hover:bg-slate-200";
+  }
 };

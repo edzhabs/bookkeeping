@@ -84,6 +84,11 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/tuitions", func(r chi.Router) {
 			r.Get("/", app.getTuitionsHandler)
+
+			r.Route("/{enrollmentID}", func(r chi.Router) {
+				r.Use(app.enrollmentIDfromURLContextMiddleware)
+				r.Get("/", app.getTuitionHandler)
+			})
 		})
 
 		r.Route("/students", func(r chi.Router) {

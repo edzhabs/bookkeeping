@@ -36,6 +36,10 @@ export const NAVTITLE = {
   },
   TUITION: { title: "Tuition", url: "/tuitions" },
   TUITION_DETAILS: { title: "View Tuition", url: "/tuitions/:id" },
+  TUITION_ID_PAYMENT: {
+    title: "Pay Student Tuition",
+    url: "/tuitions/:id/payment",
+  },
   CARPOOL: { title: "Carpool", url: "/carpool" },
   OTHER_INCOME: { title: "Other Income", url: "/other_income" },
   TMPCCI_EXPENSES: { title: "TMPCCI - Expenses", url: "/school_expenses" },
@@ -58,11 +62,11 @@ export const SIDEMENU = [
     url: NAVTITLE.ENROLLMENTS.url,
     icon: UsersIcon,
   },
-  {
-    title: NAVTITLE.TUITION.title,
-    url: NAVTITLE.TUITION.url,
-    icon: DollarSignIcon,
-  },
+  // {
+  //   title: NAVTITLE.TUITION.title,
+  //   url: NAVTITLE.TUITION.url,
+  //   icon: DollarSignIcon,
+  // },
   {
     title: NAVTITLE.CARPOOL.title,
     url: NAVTITLE.CARPOOL.url,

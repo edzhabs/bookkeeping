@@ -49,6 +49,21 @@ export const displayDiscounts = (discounts: string[]) => {
   return labels.join(", ");
 };
 
+export const formatDiscount = (discount: string) => {
+  if (discount === "rank_1") {
+    return "Quipper/Books";
+  }
+  if (discount === "sibling") {
+    return "Siblings";
+  }
+  if (discount === "full_year") {
+    return "Full Payment";
+  }
+  if (discount === "scholar") {
+    return "Scholar";
+  }
+};
+
 export const formatDisplayGradeLevel = (grade_level: string) => {
   return grade_level
     .split("-")

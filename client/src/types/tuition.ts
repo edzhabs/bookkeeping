@@ -1,3 +1,5 @@
+import { BaseStudent } from "./student";
+
 export interface Payment {
   id: string;
   invoiceNumber: string;
@@ -27,7 +29,6 @@ export interface Tuition {
 
 export interface TuitionsTable {
   id: string;
-  full_name: string;
   grade_level: string;
   school_year: string;
   discount_types: string[];
@@ -35,4 +36,20 @@ export interface TuitionsTable {
   total_paid: string;
   remaining_amount: string;
   payment_status: "paid" | "partial" | "unpaid";
+}
+
+export interface TuitionDetails extends TuitionsTable {
+  student: BaseStudent;
+  monthly_tuition: string;
+  enrollment_fee: string;
+  misc_fee: string;
+  pta_fee: string;
+  lms_books_fee: string;
+  discount_total_amount: string;
+  discount_details: DiscountDetails[];
+}
+
+export interface DiscountDetails {
+  type: string;
+  amount: string;
 }

@@ -13,12 +13,13 @@ import EnrollmentPage from "./pages/Enrollment/EnrollmentPage";
 import TransactionsPage from "./pages/Transaction/TransactionPage";
 import ViewStudentDetailsPage from "./pages/Enrollment/Details/ViewStudentPageDetails";
 import EditStudentDetailsPage from "./pages/Enrollment/Details/EditStudentPageDetails";
-import TuitionDetailsPage from "./pages/Tuition/ViewTuitionPage";
+import TuitionDetailsPage from "./pages/Tuition/ViewTuitionPageDetails";
 import TransactionDetailsPage from "./pages/Transaction/TransactionDetailsPage";
 import ArchivePage from "./pages/Archive/ArchivePage";
 import ArchiveDetailsPage from "./pages/Archive/ArchiveDetailsPage";
 import NewEnrollmentPage from "./pages/Enrollment/EnrollNewStudentPage";
 import OldEnrollmentPage from "./pages/Enrollment/EnrollOldStudentPage";
+import TuitionIDPaymentPage from "./pages/Payment/TuitionIDPaymentPage";
 
 const router = createBrowserRouter([
   {
@@ -56,14 +57,18 @@ const router = createBrowserRouter([
         element: <EditStudentDetailsPage />,
       },
       // Tuition
-      {
-        path: NAVTITLE.TUITION.url,
-        element: <TuitionPage />,
-      },
-      {
-        path: NAVTITLE.TUITION_DETAILS.url,
-        element: <TuitionDetailsPage />,
-      },
+      // {
+      //   path: NAVTITLE.TUITION.url,
+      //   element: <TuitionPage />,
+      // },
+      // {
+      //   path: NAVTITLE.TUITION_DETAILS.url,
+      //   element: <TuitionDetailsPage />,
+      // },
+      // {
+      //   path: NAVTITLE.TUITION_ID_PAYMENT.url,
+      //   element: <TuitionIDPaymentPage />,
+      // },
       // Carpool
       {
         path: NAVTITLE.CARPOOL.url,

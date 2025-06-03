@@ -27,14 +27,15 @@ import CONSTANTS from "@/constants/constants";
 
 const visibleColumns = {
   full_name: true,
-  type: true,
-  gender: true,
+  type: false,
+  gender: false,
   grade_level: true,
   school_year: true,
-  discount: false,
-  total_amount: false,
-  remaining_amount: false,
-  payment_status: false,
+  discount: true,
+  total_tuition_amount_due: true,
+  total_tuition_paid: true,
+  tuition_balance: true,
+  tuition_payment_status: true,
 };
 
 export default function EnrollmentPage() {

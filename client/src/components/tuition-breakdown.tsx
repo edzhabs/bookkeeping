@@ -15,7 +15,6 @@ interface Props {
 const TuitionBreakdown = ({
   discountAmount,
   enrollment_fee,
-  fullYearDiscountAmount,
   totalAmount,
   isRankOne,
   lms_books_fee,
@@ -23,6 +22,7 @@ const TuitionBreakdown = ({
   monthly_tuition,
   pta_fee,
   rankOneDiscountAmount,
+  fullYearDiscountAmount,
   scholarDiscountAmount,
   siblingDiscountAmount,
 }: Props) => {

@@ -24,42 +24,39 @@ type Enrollment struct {
 	DeletedAt      time.Time       `json:"deleted_at"`
 }
 
-type Discount struct {
-	ID           uuid.UUID       `json:"discount_id"`
-	EnrollmentID uuid.UUID       `json:"enrollment_id"`
-	Type         string          `json:"type"`
-	Scope        string          `json:"scope"`
-	Amount       decimal.Decimal `json:"amount"`
-	CreatedAt    time.Time       `json:"created_at"`
-	UpdatedAt    time.Time       `json:"updated_at"`
-	DeletedAt    time.Time       `json:"deleted_at"`
-}
-
 type EnrollmentsTableData struct {
-	ID              uuid.UUID       `json:"id"`
-	FullName        string          `json:"full_name"`
-	Type            string          `json:"type"`
-	GradeLevel      string          `json:"grade_level"`
-	Gender          string          `json:"gender"`
-	SchoolYear      string          `json:"school_year"`
-	DiscountTypes   []string        `json:"discount_types"`
-	TotalAmount     decimal.Decimal `json:"total_amount"`
-	TotalPaid       decimal.Decimal `json:"total_paid"`
-	RemainingAmount decimal.Decimal `json:"remaining_amount"`
-	PaymentStatus   string          `json:"payment_status"`
+	ID                    uuid.UUID       `json:"id"`
+	FullName              string          `json:"full_name"`
+	Type                  string          `json:"type"`
+	GradeLevel            string          `json:"grade_level"`
+	Gender                string          `json:"gender"`
+	SchoolYear            string          `json:"school_year"`
+	DiscountTypes         []string        `json:"discount_types"`
+	TotalTuitionAmountDue decimal.Decimal `json:"total_tuition_amount_due"`
+	TotalTuitionPaid      decimal.Decimal `json:"total_tuition_paid"`
+	TuitionBalance        decimal.Decimal `json:"tuition_balance"`
+	TuitionPaymentStatus  string          `json:"tuition_payment_status"`
 }
 
 type EnrollmentStudentDetails struct {
-	ID              uuid.UUID       `json:"id"`
-	Type            string          `json:"type"`
-	GradeLevel      string          `json:"grade_level"`
-	SchoolYear      string          `json:"school_year"`
-	DiscountTypes   []string        `json:"discount_types"`
-	TotalAmount     decimal.Decimal `json:"total_amount"`
-	TotalPaid       decimal.Decimal `json:"total_paid"`
-	RemainingAmount decimal.Decimal `json:"remaining_amount"`
-	PaymentStatus   string          `json:"payment_status"`
-	Student         *Student        `json:"student"`
+	ID                    uuid.UUID          `json:"id"`
+	Type                  string             `json:"type"`
+	GradeLevel            string             `json:"grade_level"`
+	SchoolYear            string             `json:"school_year"`
+	EnrollmentFee         decimal.Decimal    `json:"enrollment_fee"`
+	MonthlyTuition        decimal.Decimal    `json:"monthly_tuition"`
+	MiscFee               decimal.Decimal    `json:"misc_fee"`
+	PtaFee                decimal.Decimal    `json:"pta_fee"`
+	LmsFee                decimal.Decimal    `json:"lms_books_fee"`
+	DiscountTypes         []string           `json:"discount_types"`
+	DiscountDetails       DiscountDetailList `json:"discount_details"`
+	DiscountTotalAmount   decimal.Decimal    `json:"discount_total_amount"`
+	TotalTuitionAmountDue decimal.Decimal    `json:"total_tuition_amount_due"`
+	TotalTuitionPaid      decimal.Decimal    `json:"total_tuition_paid"`
+	TotalOtherPaid        decimal.Decimal    `json:"total_other_paid"`
+	TuitionBalance        decimal.Decimal    `json:"tuition_balance"`
+	TuitionPaymentStatus  string             `json:"tuition_payment_status"`
+	Student               *Student           `json:"student"`
 }
 
 type EditEnrollmentDetails struct {

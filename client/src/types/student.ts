@@ -1,6 +1,6 @@
 import CONSTANTS from "@/constants/constants";
 
-export interface Student {
+export interface BaseStudent {
   id?: string;
   first_name: string;
   middle_name: string;
@@ -10,6 +10,9 @@ export interface Student {
   gender?: "Male" | "Female";
   birthdate?: string;
   address?: string;
+}
+
+export interface Student extends BaseStudent {
   living_with?: string;
   contact_numbers?: string[];
   father_name?: string;

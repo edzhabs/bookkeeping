@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CONSTANTS from "@/constants/constants";
-import useStudentsQuery from "@/hooks/useStudents";
+import useStudentsQuery from "@/hooks/useStudentsQuery";
 import oldEnrollmentSchema from "@/lib/validation/OldStudentEnrollment";
 import { EnrollStudent } from "@/types/enrollment";
 import { IGradeLevel, StudentDropdown } from "@/types/student";

@@ -20,6 +20,7 @@ const CONSTANTS = {
   QUERYKEY: {
     ENROLLMENT: "enrollment",
     STUDENTS: "students",
+    TUITIONS: "tuitions",
   },
 };
 

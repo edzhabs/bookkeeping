@@ -18,3 +18,18 @@ func (app *application) getTuitionsHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 }
+
+func (app *application) getTuitionHandler(w http.ResponseWriter, r *http.Request) {
+	tuitionID := app.getEnrollmentIDFromCtx(r)
+
+	tuition, err := app.store.Tuitions.GetTuitionByID(r.Context(), tuitionID)
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := utils.ResponseJSON(w, http.StatusOK, tuition); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+}

@@ -19,62 +19,122 @@ type EnrollmentStore struct {
 func (s *EnrollmentStore) GetEnrollmentByID(ctx context.Context, id uuid.UUID) (models.EnrollmentStudentDetails, error) {
 	query := `
 		SELECT
-	  e.id,
-	  s.id,
-	  s.first_name,
-	  s.middle_name,
-	  s.last_name,
-	  s.suffix,
-      TRIM(CONCAT_WS(' ',
-        s.first_name,
-        CASE
-          WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
-          THEN LEFT(s.middle_name, 1) || '.'
-          ELSE NULL
-        END,
-        s.last_name,
-        s.suffix
-      )) AS full_name,
-	  s.gender,
-	  s.birthdate,
-	  s.address,
-	  s.mother_name,
-	  s.mother_job,
-	  s.mother_education,
-	  s.father_name,
-	  s.father_job,
-	  s.father_education,
-	  s.living_with,
-	  s.contact_numbers,
-	  e.type,
-	  e.grade_level,
-	  e.school_year,
-	  COALESCE(array_agg(DISTINCT d.type) FILTER (WHERE d.type IS NOT NULL), ARRAY[]::text[]) AS discount_types,
-      (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
-         - COALESCE(SUM(d.amount), 0)) AS total_amount,
-	  COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) AS total_paid,
-	  (
-	 	(e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee)
-		- COALESCE(SUM(d.amount), 0)
-		- COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) 
-	  ) AS remaining_amount,
-	  CASE
-	  	WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) = 0
-			THEN 'unpaid'
-		WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) >=
-			   (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0))
+		e.id,
+		s.id,
+		s.first_name,
+		s.middle_name,
+		s.last_name,
+		s.suffix,
+		TRIM(CONCAT_WS(' ',
+			s.first_name,
+			CASE
+			WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
+				THEN LEFT(s.middle_name, 1) || '.'
+			ELSE NULL
+			END,
+			s.last_name,
+			s.suffix
+		)) AS full_name,
+		s.gender,
+		s.birthdate,
+		s.address,
+		s.mother_name,
+		s.mother_job,
+		s.mother_education,
+		s.father_name,
+		s.father_job,
+		s.father_education,
+		s.living_with,
+		s.contact_numbers,
+		e.type,
+		e.grade_level,
+		e.school_year,
+		e.enrollment_fee,
+		e.monthly_tuition,
+		e.misc_fee,
+		e.pta_fee,
+		e.lms_books_fee,
+
+		-- Discounts
+		COALESCE(array_agg(DISTINCT d.type) FILTER (WHERE d.type IS NOT NULL), ARRAY[]::text[]) AS discount_types,
+		jsonb_agg(
+			jsonb_build_object('type', d.type, 'amount', d.amount)
+			ORDER BY d.type
+		) FILTER (WHERE d.amount > 0)::jsonb AS discount_details,
+		COALESCE(SUM(d.amount), 0) AS discount_total_amount,
+
+		-- Total Due
+		((e.monthly_tuition * e.months) + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0)) AS total_tuition_amount_due,
+
+		-- Total paid: tuition-related
+		(
+			SELECT 
+			COALESCE(SUM(tp.amount), 0)
+			+ COALESCE((
+				SELECT SUM(op.amount)
+				FROM other_payments op
+				WHERE op.enrollment_id = e.id 
+				AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
+				AND op.deleted_at IS NULL
+			), 0)
+			FROM tuition_payments tp
+			WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL
+		) AS total_tuition_paid,
+
+		-- Total paid: other (non-tuition) categories
+		(
+			SELECT COALESCE(SUM(op.amount), 0)
+			FROM other_payments op
+			WHERE op.enrollment_id = e.id 
+			AND op.category NOT IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
+			AND op.deleted_at IS NULL
+		) AS total_other_paid,
+
+		-- Remaining balance
+		(
+			(e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee)
+			- COALESCE(SUM(d.amount), 0)
+			- (
+			(SELECT 
+				COALESCE(SUM(tp.amount), 0)
+				FROM tuition_payments tp
+				WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+			+
+			(SELECT 
+				COALESCE(SUM(op.amount), 0)
+				FROM other_payments op
+				WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+			)
+		) AS tuition_balance,
+
+		-- Payment status
+		CASE
+			WHEN (
+			(SELECT COALESCE(SUM(tp.amount), 0) FROM tuition_payments tp WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+			+
+			(SELECT COALESCE(SUM(op.amount), 0) FROM other_payments op WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+			) >= (
+			e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0)
+			)
 			THEN 'paid'
-		ELSE 'partial'
-	  END AS payment_status
-    FROM enrollments e
-    LEFT JOIN discounts d ON d.enrollment_id = e.id AND d.deleted_at IS NULL
-	LEFT JOIN tuition_payments tp ON tp.enrollment_id = e.id AND tp.deleted_at IS NULL
-    LEFT JOIN students s ON s.id = e.student_id AND s.deleted_at IS NULL
-    WHERE e.deleted_at IS NULL AND e.id = $1
-	GROUP BY e.id, s.id, s.first_name, s.middle_name, s.last_name, s.suffix, e.type, e.school_year, e.grade_level,
-	  s.gender, s.birthdate, s.address, s.mother_name, s.mother_job, s.mother_education, s.father_name, s.father_job,
-	  s.father_education, s.living_with, s.contact_numbers, e.monthly_tuition, e.months, e.enrollment_fee, e.misc_fee,
-	  e.pta_fee, e.lms_books_fee
+			WHEN (
+			(SELECT COALESCE(SUM(tp.amount), 0) FROM tuition_payments tp WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+			+
+			(SELECT COALESCE(SUM(op.amount), 0) FROM other_payments op WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+			) = 0
+			THEN 'unpaid'
+			ELSE 'partial'
+		END AS tuition_payment_status
+
+		FROM enrollments e
+		LEFT JOIN discounts d ON d.enrollment_id = e.id AND d.deleted_at IS NULL
+		LEFT JOIN students s ON s.id = e.student_id AND s.deleted_at IS NULL
+		WHERE e.deleted_at IS NULL AND e.id = $1
+		GROUP BY e.id, s.id, s.first_name, s.middle_name, s.last_name, s.suffix,
+		s.gender, s.birthdate, s.address,
+		s.mother_name, s.mother_job, s.mother_education,
+		s.father_name, s.father_job, s.father_education,
+		s.living_with, s.contact_numbers
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
@@ -109,11 +169,19 @@ func (s *EnrollmentStore) GetEnrollmentByID(ctx context.Context, id uuid.UUID) (
 		&enrollment.Type,
 		&enrollment.GradeLevel,
 		&enrollment.SchoolYear,
+		&enrollment.EnrollmentFee,
+		&enrollment.MonthlyTuition,
+		&enrollment.MiscFee,
+		&enrollment.PtaFee,
+		&enrollment.LmsFee,
 		pq.Array(&enrollment.DiscountTypes),
-		&enrollment.TotalAmount,
-		&enrollment.TotalPaid,
-		&enrollment.RemainingAmount,
-		&enrollment.PaymentStatus,
+		&enrollment.DiscountDetails,
+		&enrollment.DiscountTotalAmount,
+		&enrollment.TotalTuitionAmountDue,
+		&enrollment.TotalTuitionPaid,
+		&enrollment.TotalOtherPaid,
+		&enrollment.TuitionBalance,
+		&enrollment.TuitionPaymentStatus,
 	)
 	if err != nil {
 		switch err {
@@ -274,23 +342,63 @@ func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTable
       e.school_year,
 	  e.grade_level,
 	  s.gender,
-	  COALESCE(array_agg(DISTINCT d.type) FILTER (WHERE d.type IS NOT NULL), ARRAY[]::text[]) AS discount_types,
-      (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
-         - COALESCE(SUM(d.amount), 0)) AS total_amount,
-	  COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) AS total_paid,
-	  (
-	 	(e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee)
+
+	-- Discounts
+	COALESCE(array_agg(DISTINCT d.type) FILTER (WHERE d.type IS NOT NULL), ARRAY[]::text[]) AS discount_types,
+
+	-- Total Due
+	((e.monthly_tuition * e.months) + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0)) AS total_tuition_amount_due,
+
+	-- Total paid: tuition-related
+	(
+		SELECT 
+		COALESCE(SUM(tp.amount), 0)
+		+ COALESCE((
+			SELECT SUM(op.amount)
+			FROM other_payments op
+			WHERE op.enrollment_id = e.id 
+			AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
+			AND op.deleted_at IS NULL
+		), 0)
+		FROM tuition_payments tp
+		WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL
+	) AS total_tuition_paid,
+
+	-- Remaining balance
+	(
+		(e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee)
 		- COALESCE(SUM(d.amount), 0)
-		- COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) 
-	  ) AS remaining_amount,
-	  CASE
-	  	WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) = 0
-			THEN 'unpaid'
-		WHEN COALESCE(SUM(tp.reservation_fee + tp.tuition_fee + tp.advance_payment), 0) >=
-			   (e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0))
-			THEN 'paid'
+		- (
+		(SELECT 
+			COALESCE(SUM(tp.amount), 0)
+			FROM tuition_payments tp
+			WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+		+
+		(SELECT 
+			COALESCE(SUM(op.amount), 0)
+			FROM other_payments op
+			WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+		)
+	) AS tuition_balance,
+
+	-- Payment status
+	CASE
+		WHEN (
+		(SELECT COALESCE(SUM(tp.amount), 0) FROM tuition_payments tp WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+		+
+		(SELECT COALESCE(SUM(op.amount), 0) FROM other_payments op WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+		) >= (
+		e.monthly_tuition * e.months + e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee - COALESCE(SUM(d.amount), 0)
+		)
+		THEN 'paid'
+		WHEN (
+		(SELECT COALESCE(SUM(tp.amount), 0) FROM tuition_payments tp WHERE tp.enrollment_id = e.id AND tp.deleted_at IS NULL)
+		+
+		(SELECT COALESCE(SUM(op.amount), 0) FROM other_payments op WHERE op.enrollment_id = e.id AND op.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee') AND op.deleted_at IS NULL)
+		) = 0
+		THEN 'unpaid'
 		ELSE 'partial'
-	  END AS payment_status
+	END AS tuition_payment_status
     FROM enrollments e
     LEFT JOIN discounts d ON d.enrollment_id = e.id AND d.deleted_at IS NULL
 	LEFT JOIN tuition_payments tp ON tp.enrollment_id = e.id AND tp.deleted_at IS NULL
@@ -322,10 +430,10 @@ func (s *EnrollmentStore) GetAll(ctx context.Context) ([]models.EnrollmentsTable
 			&enrollment.GradeLevel,
 			&enrollment.Gender,
 			pq.Array(&enrollment.DiscountTypes),
-			&enrollment.TotalAmount,
-			&enrollment.TotalPaid,
-			&enrollment.RemainingAmount,
-			&enrollment.PaymentStatus,
+			&enrollment.TotalTuitionAmountDue,
+			&enrollment.TotalTuitionPaid,
+			&enrollment.TuitionBalance,
+			&enrollment.TuitionPaymentStatus,
 		)
 		if err != nil {
 			return nil, err

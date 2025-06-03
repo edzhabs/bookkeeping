@@ -130,8 +130,10 @@ func generateEnrollments(num int) []*models.Enrollment {
 				total_tuition := monthlyTuition.Mul(decimal.NewFromInt(10))
 				switch strings.ToLower(d) {
 				case constants.Rank_1:
-					discount.Type = constants.Rank_1
-					discount.Amount = lmsBooksFee
+					if isGradeSchool {
+						discount.Type = constants.Rank_1
+						discount.Amount = lmsBooksFee
+					}
 				case constants.Sibling:
 					discount.Type = constants.Sibling
 					discount.Amount = total_tuition.Mul(decimal.NewFromFloat(0.05))
