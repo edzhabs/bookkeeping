@@ -72,3 +72,32 @@ func (d *DiscountDetailList) Scan(src interface{}) error {
 
 	return json.Unmarshal(bytes, d)
 }
+
+type TuitionDropdown struct {
+	StudentID      uuid.UUID                  `json:"student_id"`
+	FullName       string                     `json:"full_name"`
+	Address        string                     `json:"address"`
+	TuitionDetails []TuitionEnrollmentDetails `json:"tuition_details"`
+}
+
+type TuitionEnrollmentDetails struct {
+	EnrollmentID          uuid.UUID       `json:"enrollment_id"`
+	SchoolYear            string          `json:"school_year"`
+	GradeLevel            string          `json:"grade_level"`
+	TotalTuitionAmountDue decimal.Decimal `json:"total_due"`
+	TotalTuitionPaid      decimal.Decimal `json:"total_paid"`
+	TuitionBalance        decimal.Decimal `json:"balance"`
+}
+
+type TuitionPayment struct {
+	ID            uuid.UUID       `json:"id"`
+	EnrollmentID  uuid.UUID       `json:"enrollment_id"`
+	Amount        decimal.Decimal `json:"amount"`
+	PaymentMethod string          `json:"payment_method"`
+	PaymentDate   time.Time       `json:"payment_date"`
+	InvoiceNumber string          `json:"invoice_number"`
+	Notes         string          `json:"notes"`
+	CreatedAt     time.Time       `json:"created_at"`
+	UpdatedAt     time.Time       `json:"updated_at"`
+	DeletedAt     time.Time       `json:"deleted_at"`
+}

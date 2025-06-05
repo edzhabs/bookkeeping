@@ -21,6 +21,10 @@ const CONSTANTS = {
     ENROLLMENT: "enrollment",
     STUDENTS: "students",
     TUITIONS: "tuitions",
+    TUITIONDROPDOWN: "tuitions_dropdown",
+  },
+  STORAGEKEY: {
+    ENROLLMENTABLE: "enrollmentTable",
   },
 };
 

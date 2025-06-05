@@ -11,19 +11,14 @@ import { Separator } from "@/components/ui/separator";
 import { StudentEnrollmentDetails } from "@/types/enrollment";
 import { formatToCurrency } from "@/utils";
 import { CreditCard } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const FinancialSummaryComp = ({
   enrollment,
+  handleMakePayment,
 }: {
   enrollment: StudentEnrollmentDetails;
+  handleMakePayment: () => void;
 }) => {
-  const navigate = useNavigate();
-
-  const handleMakePayment = (tuitionId: string) => {
-    navigate(`/tuitions/${tuitionId}/payment`);
-  };
-
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -51,7 +46,7 @@ const FinancialSummaryComp = ({
           </div>
           <div>
             <p className="text-sm font-medium">Total Paid</p>
-            <p className="text-2xl font-bold text-emerald-600">
+            <p className="text-2xl font-bold text-blue-500">
               {formatToCurrency(enrollment.total_tuition_paid)}
             </p>
             <p className="text-xs text-muted-foreground">
@@ -89,10 +84,7 @@ const FinancialSummaryComp = ({
       </CardContent>
       {Number(enrollment.tuition_balance) > 0 && (
         <CardFooter className="mt-4">
-          <Button
-            className="w-full cursor-pointer"
-            onClick={() => handleMakePayment("test")}
-          >
+          <Button className="w-full cursor-pointer" onClick={handleMakePayment}>
             <CreditCard className="mr-2 h-4 w-4" />
             Make Payment
           </Button>

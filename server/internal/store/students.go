@@ -144,17 +144,17 @@ func (s *StudentStore) GetAll(ctx context.Context) ([]StudentWithAge, error) {
 
 func (s *StudentStore) GetDropdown(ctx context.Context) ([]models.StudentDropdown, error) {
 	query := `
-		SELECT s.id, s.first_name, s.middle_name, s.last_name, s.suffix, s.address, e.grade_level, e.school_year
+		SELECT e.id, s.id, s.first_name, s.middle_name, s.last_name, s.suffix, s.address, e.grade_level, e.school_year
 		FROM students s
 		LEFT JOIN LATERAL (
-			SELECT e.grade_level, e.school_year, e.created_at
+			SELECT e.id, e.grade_level, e.school_year, e.created_at
 			FROM enrollments e
 			WHERE e.student_id = s.id AND e.deleted_at IS NULL
 			ORDER BY e.school_year DESC
 			LIMIT 1
 		) e ON true
 		WHERE s.deleted_at IS NULL
-		ORDER BY e.created_at DESC
+		ORDER BY s.last_name ASC
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
@@ -170,7 +170,8 @@ func (s *StudentStore) GetDropdown(ctx context.Context) ([]models.StudentDropdow
 	for rows.Next() {
 		var student models.StudentDropdown
 		err := rows.Scan(
-			&student.ID,
+			&student.EnrollmentID,
+			&student.StudentID,
 			&student.FirstName,
 			&student.MiddleName,
 			&student.LastName,

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/edzhabs/bookkeeping/internal/models"
+	"github.com/edzhabs/bookkeeping/internal/utils"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 )
@@ -189,4 +190,148 @@ func (s *TuitionStore) GetTuitionByID(ctx context.Context, id uuid.UUID) (models
 	}
 
 	return tuition, nil
+}
+
+func (s *TuitionStore) TuitionDropdown(ctx context.Context) ([]models.TuitionDropdown, error) {
+	query := `
+		SELECT 
+			s.id as student_id,
+			TRIM(CONCAT_WS(' ',
+				s.first_name,
+				CASE
+					WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
+					THEN LEFT(s.middle_name, 1) || '.'
+					ELSE NULL
+				END,
+				s.last_name,
+				s.suffix
+			)) AS full_name,
+			s.address,
+			JSON_AGG(
+				JSON_BUILD_OBJECT(
+					'enrollment_id', e.id,
+					'school_year', e.school_year,
+					'grade_level', e.grade_level,
+
+					-- Updated total_due: subtract discounts
+					'total_due',
+						((e.monthly_tuition * e.months)
+						+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
+						- COALESCE(d.total_discount, 0)),
+
+					-- Updated total_paid: tuition + selected other_payment categories
+					'total_paid',
+						COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0),
+
+					-- Updated balance
+					'balance',
+						((e.monthly_tuition * e.months)
+						+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
+						- COALESCE(d.total_discount, 0)
+						- (COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0))
+						)
+				) ORDER BY e.school_year DESC
+			) AS enrollments
+		FROM students s
+		JOIN enrollments e ON e.student_id = s.id
+
+		-- Tuition payments
+		LEFT JOIN (
+			SELECT enrollment_id, SUM(amount) AS total_tuition_paid
+			FROM tuition_payments
+			WHERE deleted_at IS NULL
+			GROUP BY enrollment_id
+		) tp ON tp.enrollment_id = e.id
+
+		-- Other payments for relevant categories
+		LEFT JOIN (
+			SELECT enrollment_id, SUM(amount) AS total_other_paid
+			FROM other_payments
+			WHERE deleted_at IS NULL
+			AND category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
+			GROUP BY enrollment_id
+		) op ON op.enrollment_id = e.id
+
+		-- Discounts with relevant scope
+		LEFT JOIN (
+			SELECT enrollment_id, SUM(amount) AS total_discount
+			FROM discounts
+			WHERE deleted_at IS NULL
+			AND scope IN ('tuition', 'lms_books')
+			GROUP BY enrollment_id
+		) d ON d.enrollment_id = e.id
+
+		WHERE e.deleted_at IS NULL
+		GROUP BY s.id, s.first_name, s.middle_name, s.last_name, s.suffix, s.address
+		ORDER BY full_name ASC
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var tuitions []models.TuitionDropdown
+	for rows.Next() {
+		var tuition models.TuitionDropdown
+		var detailsJSON []byte
+		err := rows.Scan(
+			&tuition.StudentID,
+			&tuition.FullName,
+			&tuition.Address,
+			&detailsJSON,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if err := utils.ScanJSON(detailsJSON, &tuition.TuitionDetails); err != nil {
+			return nil, err
+		}
+
+		tuitions = append(tuitions, tuition)
+	}
+
+	return tuitions, nil
+}
+
+func (s *TuitionStore) TuitionPayment(ctx context.Context, payment *models.TuitionPayment) error {
+	query := `
+		INSERT INTO tuition_payments
+			(enrollment_id, amount, payment_method, payment_date, invoice_number, notes)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id, created_at
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		payment.EnrollmentID,
+		payment.Amount,
+		payment.PaymentMethod,
+		payment.PaymentDate,
+		payment.InvoiceNumber,
+		payment.Notes,
+	).Scan(
+		&payment.ID,
+		&payment.CreatedAt,
+	)
+	if err != nil {
+		switch err.Error() {
+		case `pq: duplicate key value violates unique constraint "tuition_payments_invoice_number_key"`:
+			return ErrDuplicate
+		default:
+			return err
+		}
+	}
+
+	return nil
 }

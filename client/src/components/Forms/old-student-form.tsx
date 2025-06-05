@@ -55,9 +55,9 @@ const OldStudentForm = ({ setEnrollmentData, setActiveTab }: Props) => {
   const [selectedStudent, setSelectedStudent] = useState<StudentDropdown>();
 
   const handleStudentChange = (studentId: string) => {
-    studentForm.setValue("studentID", studentId);
-    const student = existingStudents?.find((s) => s.id === studentId);
+    const student = existingStudents?.find((s) => s.student_id === studentId);
     if (student) {
+      studentForm.setValue("studentID", studentId);
       console.log(student);
       setSelectedStudent(student);
       studentForm.trigger("studentID");

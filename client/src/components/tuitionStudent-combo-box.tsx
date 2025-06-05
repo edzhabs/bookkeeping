@@ -1,7 +1,6 @@
-import * as React from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
+import * as React from "react";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -16,36 +15,34 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { StudentDropdown } from "@/types/student";
-import { formatFullNameLastFirst } from "@/utils";
+import { cn } from "@/lib/utils";
+import { TuitionDropdown } from "@/types/tuition";
 
-interface StudentComboboxProps {
-  students: StudentDropdown[] | undefined;
+interface TuitionStudentComboboxProps {
+  tuitions: TuitionDropdown[] | undefined;
   selectedValue: string;
   isLoading: boolean;
+  isDisabled: boolean;
   onValueChange: (value: string) => void;
   placeholder?: string;
 }
 
-export function StudentCombobox({
-  students,
+export function TuitionStudentCombobox({
+  tuitions,
   selectedValue,
   isLoading,
+  isDisabled,
   onValueChange,
   placeholder = "Select a student...",
-}: StudentComboboxProps) {
+}: TuitionStudentComboboxProps) {
   const [open, setOpen] = React.useState(false);
 
-  const selectedStudent = students?.find(
-    (student) => student.student_id === selectedValue
+  const selectedStudent = tuitions?.find(
+    (tuition) => tuition.student_id === selectedValue
   );
 
-  const getStudentSearchValue = (student: StudentDropdown) => {
-    return `${student.first_name} ${student.middle_name || ""} ${
-      student.last_name
-    } ${student.suffix || ""} ${student.grade_level} ${
-      student.school_year
-    }`.toLowerCase();
+  const getStudentSearchValue = (tuition: TuitionDropdown) => {
+    return tuition.full_name;
   };
 
   return (
@@ -59,16 +56,11 @@ export function StudentCombobox({
             "w-full justify-between",
             !selectedValue && "text-muted-foreground"
           )}
-          disabled={isLoading}
+          disabled={isLoading || isDisabled}
         >
           {selectedValue ? (
             <div className="flex flex-col items-start">
-              <span className="font-medium">
-                {formatFullNameLastFirst(selectedStudent!)}
-              </span>
-              <span className="text-xs text-muted-foreground capitalize">
-                {selectedStudent?.grade_level} • {selectedStudent?.school_year}
-              </span>
+              <span className="font-medium">{selectedStudent?.full_name}</span>
             </div>
           ) : (
             placeholder
@@ -82,25 +74,25 @@ export function StudentCombobox({
       >
         <Command>
           <CommandInput
-            placeholder="Search students..."
+            placeholder="Search tuitions..."
             className="flex-1 border-0 focus:ring-0"
           />
           <CommandList>
             <CommandEmpty>No student found.</CommandEmpty>
             <CommandGroup className="max-h-64 overflow-y-auto">
-              {students?.map((student) => (
+              {tuitions?.map((tuition, index) => (
                 <CommandItem
-                  key={student.student_id}
-                  value={getStudentSearchValue(student)}
+                  key={index}
+                  value={getStudentSearchValue(tuition)}
                   onSelect={() => {
-                    onValueChange(student.student_id);
+                    onValueChange(tuition.student_id);
                     setOpen(false);
                   }}
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      selectedValue === student.student_id
+                      selectedValue === tuition.student_id
                         ? "opacity-100"
                         : "opacity-0"
                     )}
@@ -108,16 +100,11 @@ export function StudentCombobox({
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-medium truncate">
-                        {formatFullNameLastFirst(student)}
+                        {tuition.full_name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="capitalize">{student.grade_level}</span>
-                      <span>•</span>
-                      <span>{student.school_year}</span>
-                    </div>
                     <span className="text-xs text-muted-foreground truncate">
-                      {student.address}
+                      {tuition.address}
                     </span>
                   </div>
                 </CommandItem>

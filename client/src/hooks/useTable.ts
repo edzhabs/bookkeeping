@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -17,17 +17,52 @@ import { rankItem } from "@tanstack/match-sorter-utils";
 function useTable<TData>(
   columns: ColumnDef<TData, unknown>[],
   visibleColumns: Record<string, boolean>,
-  data: TData[] | undefined
+  data: TData[] | undefined,
+  storageKey: string
 ) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [globalFilter, setGlobalFilter] = useState<string>("");
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] =
-    useState<VisibilityState>(visibleColumns);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
+  const savedState =
+    typeof window !== "undefined"
+      ? JSON.parse(localStorage.getItem(storageKey) || "{}")
+      : {};
+
+  const [sorting, setSorting] = useState<SortingState>(
+    savedState.sorting || []
+  );
+  const [globalFilter, setGlobalFilter] = useState<string>(
+    savedState.globalFilter || ""
+  );
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
+    savedState.columnFilters || []
+  );
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
+    savedState.columnVisibility || visibleColumns
+  );
+  const [pagination, setPagination] = useState<PaginationState>(
+    savedState.pagination || {
+      pageIndex: 0,
+      pageSize: 10,
+    }
+  );
+
+  useEffect(() => {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        sorting,
+        globalFilter,
+        columnFilters,
+        columnVisibility,
+        pagination,
+      })
+    );
+  }, [
+    sorting,
+    globalFilter,
+    columnVisibility,
+    columnFilters,
+    pagination,
+    storageKey,
+  ]);
 
   const tableConfig = useMemo(
     () => ({

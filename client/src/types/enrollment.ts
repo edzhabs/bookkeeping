@@ -1,18 +1,28 @@
 import { IGradeLevel, Student } from "./student";
 import { DiscountDetails } from "./tuition";
 
+export interface EnrollmentStore {
+  enrollment_id: string;
+  student_id: string;
+  grade_level: string;
+  school_year: string;
+  total_tuition_amount_due: string;
+  total_tuition_paid: string;
+  tuition_balance: string;
+}
+
 export interface EnrollmentTable {
   id: string;
+  grade_level: string;
+  school_year: string;
+  total_tuition_amount_due: string;
+  total_tuition_paid: string;
+  tuition_balance: string;
   type: "old" | "new";
   gender: "male" | "female";
   full_name: string;
-  grade_level: string;
-  school_year: string;
   discount_types: string[];
-  total_tuition_amount_due: string;
-  total_tuition_paid: string;
   total_other_paid: string;
-  tuition_balance: string;
   tuition_payment_status: "paid" | "partial" | "unpaid";
 }
 

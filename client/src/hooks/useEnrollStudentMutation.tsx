@@ -16,7 +16,7 @@ interface MutationParam {
 export function useEnrollStudentMutation(isEdit = false) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { showLoading } = useLoading();
+  const { showLoading, hideLoading } = useLoading();
 
   return useMutation({
     mutationFn: ({ body, enrollmentID }: MutationParam) =>
@@ -28,6 +28,9 @@ export function useEnrollStudentMutation(isEdit = false) {
     onSuccess: (_, resp) => {
       queryClient.invalidateQueries({
         queryKey: [CONSTANTS.QUERYKEY.ENROLLMENT],
+      });
+      queryClient.invalidateQueries({
+        queryKey: [CONSTANTS.QUERYKEY.STUDENTS],
       });
 
       logActivity({
@@ -67,6 +70,9 @@ export function useEnrollStudentMutation(isEdit = false) {
           </AlertDescription>
         </>
       );
+    },
+    onSettled: () => {
+      hideLoading();
     },
   });
 }

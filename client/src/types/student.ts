@@ -24,7 +24,8 @@ export interface Student extends BaseStudent {
 }
 
 export interface StudentDropdown {
-  id: string;
+  enrollment_id: string;
+  student_id: string;
   first_name: string;
   middle_name: string;
   last_name: string;

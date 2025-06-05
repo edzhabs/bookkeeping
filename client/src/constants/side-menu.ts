@@ -36,9 +36,13 @@ export const NAVTITLE = {
   },
   TUITION: { title: "Tuition", url: "/tuitions" },
   TUITION_DETAILS: { title: "View Tuition", url: "/tuitions/:id" },
-  TUITION_ID_PAYMENT: {
+  TUITION_PAYMENT: {
     title: "Pay Student Tuition",
-    url: "/tuitions/:id/payment",
+    url: "/tuition_payment",
+  },
+  OTHER_PAYMENT: {
+    title: "School Payment",
+    url: "/other_payment",
   },
   CARPOOL: { title: "Carpool", url: "/carpool" },
   OTHER_INCOME: { title: "Other Income", url: "/other_income" },

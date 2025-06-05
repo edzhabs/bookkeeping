@@ -69,6 +69,7 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/enrollments", func(r chi.Router) {
 			r.Get("/", app.getEnrollmentsHandler)
+
 			r.Post("/new", app.createNewEnrollmentHandler)
 			r.Post("/existing", app.createOldEnrollmentHandler)
 
@@ -84,6 +85,7 @@ func (app *application) mount() http.Handler {
 
 		r.Route("/tuitions", func(r chi.Router) {
 			r.Get("/", app.getTuitionsHandler)
+			r.Get("/dropdown", app.getTuitionDropdownHandler)
 
 			r.Route("/{enrollmentID}", func(r chi.Router) {
 				r.Use(app.enrollmentIDfromURLContextMiddleware)
@@ -94,6 +96,10 @@ func (app *application) mount() http.Handler {
 		r.Route("/students", func(r chi.Router) {
 			r.Get("/dropdown", app.getStudentsDropdownHandler)
 			r.Post("/", app.createStudentHandler)
+		})
+
+		r.Route("/payments", func(r chi.Router) {
+			r.Post("/tuition", app.createTuitionPayment)
 		})
 	})
 

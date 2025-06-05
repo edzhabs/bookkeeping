@@ -1,64 +1,20 @@
 import { z } from "zod";
 
-export const TuitionPaymentSchema = z
-  .object({
-    schoolYear: z.string({
-      required_error: "Please select a school year.",
-    }),
-    studentID: z
-      .number({
-        required_error: "Please select a student.",
-      })
-      .positive({ message: "Invalid student," }),
-    reservationFee: z.coerce
-      .number()
-      .min(0, {
-        message: "Reservation fee must be a positive number.",
-      })
-      .optional(),
-    tuitionFee: z.coerce
-      .number()
-      .min(0, {
-        message: "Tuition fee must be a positive number.",
-      })
-      .optional(),
-    advancePayment: z.coerce
-      .number()
-      .min(0, {
-        message: "Advance payment must be a positive number.",
-      })
-      .optional(),
-    paymentMethod: z.enum(["cash", "gcash", "bank"], {
-      required_error: "Please select a payment method.",
-    }),
-    salesInvoiceNo: z
-      .string({
-        required_error: "Sales invoice number is required.",
-      })
-      .min(1, {
-        message: "Sales invoice number is required.",
-      }),
-    paymentDate: z.date({ required_error: "Please select date of payment" }),
-    notes: z.string().optional(),
-    fees: z.number().optional(),
-  })
-  .refine(
-    (data) => {
-      const total =
-        (data.reservationFee || 0) +
-        (data.tuitionFee || 0) +
-        (data.advancePayment || 0);
-      return total > 0;
-    },
-    {
-      message: "At least one payment amount is required.",
-      path: ["fees"],
-    }
-  );
-
-export const tuitionFormSchema = z.object({
-  baseTuition: z.coerce
+const TuitionPaymentSchema = z.object({
+  student_id: z.string().min(1, { message: "Please select a student." }),
+  school_year: z.string().min(1, { message: "Please select a school year." }),
+  grade_level: z.string().min(1, { message: "Please select a grade level." }),
+  amount: z.coerce
     .number()
-    .positive({ message: "Amount must be greater than 0." })
-    .refine((val) => val > 0, { message: "Amount must be greater than 0." }),
+    .min(1, { message: "Tuition fee must be greater than 0." }),
+  payment_method: z.enum(["cash", "g-cash", "bank"], {
+    required_error: "Please select a payment method.",
+  }),
+  invoice_number: z.string().min(1, { message: "O.R number is required." }),
+  payment_date: z.string().refine((date) => !isNaN(Date.parse(date)), {
+    message: "Please enter a valid date.",
+  }),
+  notes: z.string().optional(),
 });
+
+export default TuitionPaymentSchema;

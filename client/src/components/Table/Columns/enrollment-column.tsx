@@ -18,6 +18,7 @@ export const EnrollmentColumns = (
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Name" />
     ),
+    id: "full_name",
     enableHiding: false,
     meta: {
       name: "Name",

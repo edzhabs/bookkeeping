@@ -20,6 +20,8 @@ import ArchiveDetailsPage from "./pages/Archive/ArchiveDetailsPage";
 import NewEnrollmentPage from "./pages/Enrollment/EnrollNewStudentPage";
 import OldEnrollmentPage from "./pages/Enrollment/EnrollOldStudentPage";
 import TuitionIDPaymentPage from "./pages/Payment/TuitionIDPaymentPage";
+import OtherPaymentPage from "./pages/Payment/OtherPaymentPage";
+import TuitionPaymentPage from "./pages/Payment/TuitionPaymentPage";
 
 const router = createBrowserRouter([
   {
@@ -55,6 +57,15 @@ const router = createBrowserRouter([
       {
         path: NAVTITLE.EDIT_STUDENT_DETAILS.url,
         element: <EditStudentDetailsPage />,
+      },
+      // Payments
+      {
+        path: NAVTITLE.TUITION_PAYMENT.url,
+        element: <TuitionPaymentPage />,
+      },
+      {
+        path: NAVTITLE.OTHER_PAYMENT.url,
+        element: <OtherPaymentPage />,
       },
       // Tuition
       // {

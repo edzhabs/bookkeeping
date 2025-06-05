@@ -82,3 +82,13 @@ export const formatFullName = (student: IStudentFullName) => {
     student.middle_name ? student.middle_name + " " : ""
   }${student.last_name} ${student.suffix}`.trim();
 };
+
+export const getPaymentStatus = (total_amount: string, total_paid: string) => {
+  if (Number(total_amount) >= Number(total_paid)) {
+    return "paid";
+  } else if (Number(total_paid) <= 0) {
+    return "unpaid";
+  } else {
+    return "partial";
+  }
+};

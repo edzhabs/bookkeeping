@@ -29,6 +29,8 @@ import TuitionInformationComp from "./components/TuitionInformationComp";
 import { ActivityLogItem } from "@/types/activity-log";
 import useTuitionDetailsQuery from "@/hooks/useTuitionDetailsQuery";
 import PaymentRecordsComp from "./components/PaymentRecordsComp";
+import { PaymentSelectionModal } from "@/components/payment-modal";
+import useEnrollmentInfoStore from "@/stores/useEnrollmentInfoStore";
 
 const sampleActivityLogs: ActivityLogItem[] = [
   {
@@ -127,10 +129,12 @@ export default function StudentDetailsPage() {
   const params = useParams();
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
+  const { setEnrollmentInfo } = useEnrollmentInfoStore();
 
   const [showEditConfirmation, setShowEditConfirmation] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showDeleteVerification, setShowDeleteVerification] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const enrollmentQuery = useEnrollmentDetails(params?.id);
   // const tuitionQuery = useTuitionDetailsQuery(params?.id);
@@ -177,6 +181,38 @@ export default function StudentDetailsPage() {
 
   const handleViewTransaction = (paymentId: string) => {
     navigate(`/transactions/${paymentId}`);
+  };
+
+  const handleMakePayment = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handleTuitionPayment = () => {
+    setShowPaymentModal(false);
+    showLoading();
+    setTimeout(() => {
+      setEnrollmentInfo({
+        enrollment_id: enrollment?.id || "",
+        student_id: enrollment?.student.id || "",
+        school_year: enrollment?.school_year || "",
+        grade_level: enrollment?.grade_level || "",
+        total_tuition_amount_due: enrollment?.total_tuition_amount_due || "",
+        total_tuition_paid: enrollment?.total_tuition_paid || "",
+        tuition_balance: enrollment?.tuition_balance || "",
+      });
+      navigate("/tuition_payment");
+    }, 0);
+  };
+
+  const handleOtherPayment = () => {
+    showLoading();
+    setShowPaymentModal(false);
+    const params = new URLSearchParams({
+      enrollmentID: enrollment!.id,
+      schoolYear: enrollment!.school_year,
+      gradeLevel: enrollment!.grade_level,
+    });
+    navigate(`/other_payment?${params.toString()}`);
   };
 
   const mutation = useDeleteEnrollmentMutation(
@@ -235,7 +271,7 @@ export default function StudentDetailsPage() {
               Student Profile
             </h1>
             <p className="text-slate-500">
-              View and manage enrollment.student information
+              View and manage enrollment information
             </p>
           </div>
         </div>
@@ -267,7 +303,10 @@ export default function StudentDetailsPage() {
       <div className="grid gap-6 md:grid-cols-3 mb-6">
         <StudentSummaryComp enrollment={enrollment} />
 
-        <FinancialSummaryComp enrollment={enrollment} />
+        <FinancialSummaryComp
+          enrollment={enrollment}
+          handleMakePayment={handleMakePayment}
+        />
       </div>
 
       <Tabs defaultValue="details" className="w-full scrollable-tabs">
@@ -327,6 +366,15 @@ export default function StudentDetailsPage() {
         verificationText={enrollment.student.last_name}
         verificationLabel={`Type "${enrollment.student.last_name}" to confirm deletion:`}
         placeholder="Enter student's last name"
+      />
+
+      {/* Payment option modal */}
+      <PaymentSelectionModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSelectTuition={handleTuitionPayment}
+        onSelectOther={handleOtherPayment}
+        studentName={enrollment.student.full_name || ""}
       />
     </div>
   );

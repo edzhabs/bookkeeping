@@ -36,6 +36,8 @@ type Storage struct {
 	Tuitions interface {
 		GetAll(ctx context.Context) ([]models.TuitionsTableData, error)
 		GetTuitionByID(ctx context.Context, id uuid.UUID) (models.TuitionDetails, error)
+		TuitionDropdown(ctx context.Context) ([]models.TuitionDropdown, error)
+		TuitionPayment(ctx context.Context, payment *models.TuitionPayment) error
 	}
 }
 

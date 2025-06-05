@@ -43,8 +43,15 @@ export default function EnrollmentPage() {
   const navigate = useNavigate();
   const { hideLoading } = useLoading();
 
+  const savedState =
+    typeof window !== "undefined"
+      ? JSON.parse(
+          localStorage.getItem(CONSTANTS.STORAGEKEY.ENROLLMENTABLE) || "{}"
+        )
+      : {};
+
   const [schoolYears, setSchoolYears] = useState<string[]>([]);
-  const [schoolYear, setSchoolYear] = useState("All");
+  const [schoolYear, setSchoolYear] = useState(savedState.schoolYear ?? "All");
   const [isEnrollmentTypeModalOpen, setIsEnrollmentTypeModalOpen] =
     useState(false);
 
@@ -59,6 +66,18 @@ export default function EnrollmentPage() {
     queryFn: fetchEnrollments,
   });
 
+  const columns = useMemo(
+    () => EnrollmentColumns(enrollments?.data || []),
+    [enrollments?.data]
+  );
+
+  const { table } = useTable<EnrollmentTable>(
+    columns,
+    visibleColumns,
+    enrollments?.data,
+    CONSTANTS.STORAGEKEY.ENROLLMENTABLE
+  );
+
   useEffect(() => {
     hideLoading();
   }, [hideLoading]);
@@ -66,6 +85,22 @@ export default function EnrollmentPage() {
   useEffect(() => {
     header.setHeaderTitle(NAVTITLE.ENROLLMENTS.title);
   }, [header]);
+
+  useEffect(() => {
+    const currentState =
+      typeof window !== "undefined"
+        ? JSON.parse(
+            localStorage.getItem(CONSTANTS.STORAGEKEY.ENROLLMENTABLE) || "{}"
+          )
+        : {};
+
+    const newState = { ...currentState, schoolYear };
+
+    localStorage.setItem(
+      CONSTANTS.STORAGEKEY.ENROLLMENTABLE,
+      JSON.stringify(newState)
+    );
+  }, [schoolYear]);
 
   useEffect(() => {
     if (enrollments?.data && schoolYears.length === 0) {
@@ -76,16 +111,15 @@ export default function EnrollmentPage() {
     }
   }, [enrollments, schoolYears]);
 
-  const columns = useMemo(
-    () => EnrollmentColumns(enrollments?.data || []),
-    [enrollments?.data]
-  );
-
-  const { table } = useTable<EnrollmentTable>(
-    columns,
-    visibleColumns,
-    enrollments?.data
-  );
+  useEffect(() => {
+    const filterValue = table.getColumn("school_year")?.getFilterValue();
+    if (filterValue === "" || filterValue === undefined) {
+      if (schoolYear !== "All") setSchoolYear("All");
+    } else if (schoolYear !== filterValue) {
+      setSchoolYear(filterValue as string);
+    }
+    // eslint-disable-next-line
+  }, [table.getColumn("school_year")?.getFilterValue()]);
 
   const handleOpenModal = () => {
     setIsEnrollmentTypeModalOpen(true);
@@ -109,7 +143,7 @@ export default function EnrollmentPage() {
   };
 
   const handleSearch = (value: string) => {
-    table.getColumn("full_name")?.setFilterValue(value);
+    table.getColumn("full_name")?.setFilterValue(value ?? "");
   };
 
   if (isError) return <ErrorComponent />;

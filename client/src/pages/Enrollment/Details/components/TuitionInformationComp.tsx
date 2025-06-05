@@ -53,7 +53,7 @@ const TuitionInformationComp = ({
                         <dt className="text-sm font-medium text-muted-foreground">
                           Discount Amount:
                         </dt>
-                        <dd className="text-sm">
+                        <dd className="text-sm text-green-600">
                           {formatToCurrency(d.amount)}
                         </dd>
                       </div>
@@ -80,7 +80,7 @@ const TuitionInformationComp = ({
                     <dt className="text-sm font-medium text-muted-foreground">
                       Amount Paid:
                     </dt>
-                    <dd className="text-sm">
+                    <dd className="text-sm font-medium text-blue-500">
                       {formatToCurrency(enrollment?.total_tuition_paid || 0)}
                     </dd>
                   </div>
@@ -88,7 +88,7 @@ const TuitionInformationComp = ({
                     <dt className="text-sm font-medium text-muted-foreground">
                       Remaining Balance:
                     </dt>
-                    <dd className="text-sm">
+                    <dd className="text-sm font-semibold text-amber-600">
                       {formatToCurrency(enrollment?.tuition_balance || 0)}
                     </dd>
                   </div>

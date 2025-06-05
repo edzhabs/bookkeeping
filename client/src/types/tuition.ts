@@ -53,3 +53,28 @@ export interface DiscountDetails {
   type: string;
   amount: string;
 }
+
+export interface TuitionDropdown {
+  student_id: string;
+  full_name: string;
+  address: string;
+  tuition_details: TuitionEnrollmentDetails[];
+}
+
+export interface TuitionEnrollmentDetails {
+  enrollment_id: string;
+  grade_level: string;
+  school_year: string;
+  total_due: string;
+  total_paid: string;
+  balance: string;
+}
+
+export interface TuitionPaymentBody {
+  enrollment_id: string;
+  amount: number;
+  payment_method: "cash" | "g-cash" | "bank";
+  payment_date: string;
+  invoice_number: string;
+  notes: string;
+}
