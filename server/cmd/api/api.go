@@ -99,7 +99,14 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/payments", func(r chi.Router) {
-			r.Post("/tuition", app.createTuitionPayment)
+			r.Post("/tuition", app.createTuitionPaymentHandler)
+			r.Post("/other_payment", app.createOtherPaymentHandler)
+
+			r.Route("/{enrollmentID}", func(r chi.Router) {
+				r.Use(app.enrollmentIDfromURLContextMiddleware)
+				r.Get("/tuitions", app.getTuitionPaymentsHandler)
+				r.Get("/other_payments", app.getOtherPaymentsHandler)
+			})
 		})
 	})
 

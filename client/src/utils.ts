@@ -92,3 +92,14 @@ export const getPaymentStatus = (total_amount: string, total_paid: string) => {
     return "partial";
   }
 };
+
+export const formatCategory = (text: string) => {
+  if (text === "lms_fee") {
+    return "Quipper/Books ";
+  } else {
+    return text
+      .split("_") // Split by underscore
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalize each word
+      .join(" "); // Join with space
+  }
+};

@@ -37,7 +37,12 @@ type Storage struct {
 		GetAll(ctx context.Context) ([]models.TuitionsTableData, error)
 		GetTuitionByID(ctx context.Context, id uuid.UUID) (models.TuitionDetails, error)
 		TuitionDropdown(ctx context.Context) ([]models.TuitionDropdown, error)
+	}
+	Payments interface {
 		TuitionPayment(ctx context.Context, payment *models.TuitionPayment) error
+		OtherPayment(ctx context.Context, payment *models.OtherPayment) error
+		GetTuitionsPaymentsByID(ctx context.Context, id uuid.UUID) ([]models.Payment, error)
+		GetOtherPaymentsByID(ctx context.Context, id uuid.UUID) ([]models.Payment, error)
 	}
 }
 
@@ -46,6 +51,7 @@ func NewStorage(db *sql.DB) Storage {
 		Students:    &StudentStore{db},
 		Enrollments: &EnrollmentStore{db},
 		Tuitions:    &TuitionStore{db},
+		Payments:    &PaymentStore{db},
 	}
 }
 

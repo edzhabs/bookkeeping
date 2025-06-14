@@ -195,61 +195,64 @@ func (s *TuitionStore) GetTuitionByID(ctx context.Context, id uuid.UUID) (models
 func (s *TuitionStore) TuitionDropdown(ctx context.Context) ([]models.TuitionDropdown, error) {
 	query := `
 		SELECT 
-			s.id as student_id,
-			TRIM(CONCAT_WS(' ',
-				s.first_name,
-				CASE
-					WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
-					THEN LEFT(s.middle_name, 1) || '.'
-					ELSE NULL
-				END,
-				s.last_name,
-				s.suffix
-			)) AS full_name,
-			s.address,
-			JSON_AGG(
-				JSON_BUILD_OBJECT(
-					'enrollment_id', e.id,
-					'school_year', e.school_year,
-					'grade_level', e.grade_level,
+		s.id AS student_id,
+		TRIM(CONCAT_WS(' ',
+			s.first_name,
+			CASE
+				WHEN s.middle_name IS NOT NULL AND s.middle_name <> ''
+				THEN LEFT(s.middle_name, 1) || '.'
+				ELSE NULL
+			END,
+			s.last_name,
+			s.suffix
+		)) AS full_name,
+		s.address,
+		JSON_AGG(
+			JSON_BUILD_OBJECT(
+				'enrollment_id', e.id,
+				'school_year', e.school_year,
+				'grade_level', e.grade_level,
 
-					-- Updated total_due: subtract discounts
-					'total_due',
-						((e.monthly_tuition * e.months)
-						+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
-						- COALESCE(d.total_discount, 0)),
+				-- Total due: tuition + other fees - discounts
+				'total_due',
+					((e.monthly_tuition * e.months)
+					+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
+					- COALESCE(d.total_discount, 0)),
 
-					-- Updated total_paid: tuition + selected other_payment categories
-					'total_paid',
-						COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0),
+				-- Total paid: tuition invoice items + selected other invoice items
+				'total_paid',
+					COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0),
 
-					-- Updated balance
-					'balance',
-						((e.monthly_tuition * e.months)
-						+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
-						- COALESCE(d.total_discount, 0)
-						- (COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0))
-						)
-				) ORDER BY e.school_year DESC
-			) AS enrollments
+				-- Balance: total due - total paid
+				'balance',
+					((e.monthly_tuition * e.months)
+					+ e.enrollment_fee + e.misc_fee + e.pta_fee + e.lms_books_fee
+					- COALESCE(d.total_discount, 0)
+					- (COALESCE(tp.total_tuition_paid, 0) + COALESCE(op.total_other_paid, 0))
+					)
+			)
+			ORDER BY e.school_year DESC
+		) AS enrollments
 		FROM students s
 		JOIN enrollments e ON e.student_id = s.id
 
-		-- Tuition payments
+		-- Tuition invoice payments
 		LEFT JOIN (
-			SELECT enrollment_id, SUM(amount) AS total_tuition_paid
-			FROM tuition_payments
-			WHERE deleted_at IS NULL
-			GROUP BY enrollment_id
+			SELECT ti.enrollment_id, SUM(tii.amount) AS total_tuition_paid
+			FROM tuition_invoices ti
+			JOIN tuition_invoice_items tii ON ti.id = tii.invoice_id
+			WHERE ti.deleted_at IS NULL AND tii.deleted_at IS NULL
+			GROUP BY ti.enrollment_id
 		) tp ON tp.enrollment_id = e.id
 
-		-- Other payments for relevant categories
+		-- Other invoice payments (only selected categories)
 		LEFT JOIN (
-			SELECT enrollment_id, SUM(amount) AS total_other_paid
-			FROM other_payments
-			WHERE deleted_at IS NULL
-			AND category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
-			GROUP BY enrollment_id
+			SELECT oi.enrollment_id, SUM(oii.amount) AS total_other_paid
+			FROM other_invoices oi
+			JOIN other_invoice_items oii ON oi.id = oii.invoice_id
+			WHERE oi.deleted_at IS NULL AND oii.deleted_at IS NULL
+			AND oii.category IN ('enrollment_fee', 'misc_fee', 'pta_fee', 'lms_books_fee')
+			GROUP BY oi.enrollment_id
 		) op ON op.enrollment_id = e.id
 
 		-- Discounts with relevant scope
@@ -298,40 +301,4 @@ func (s *TuitionStore) TuitionDropdown(ctx context.Context) ([]models.TuitionDro
 	}
 
 	return tuitions, nil
-}
-
-func (s *TuitionStore) TuitionPayment(ctx context.Context, payment *models.TuitionPayment) error {
-	query := `
-		INSERT INTO tuition_payments
-			(enrollment_id, amount, payment_method, payment_date, invoice_number, notes)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, created_at
-	`
-
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeDuration)
-	defer cancel()
-
-	err := s.db.QueryRowContext(
-		ctx,
-		query,
-		payment.EnrollmentID,
-		payment.Amount,
-		payment.PaymentMethod,
-		payment.PaymentDate,
-		payment.InvoiceNumber,
-		payment.Notes,
-	).Scan(
-		&payment.ID,
-		&payment.CreatedAt,
-	)
-	if err != nil {
-		switch err.Error() {
-		case `pq: duplicate key value violates unique constraint "tuition_payments_invoice_number_key"`:
-			return ErrDuplicate
-		default:
-			return err
-		}
-	}
-
-	return nil
 }

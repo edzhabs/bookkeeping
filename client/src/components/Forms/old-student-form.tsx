@@ -58,7 +58,6 @@ const OldStudentForm = ({ setEnrollmentData, setActiveTab }: Props) => {
     const student = existingStudents?.find((s) => s.student_id === studentId);
     if (student) {
       studentForm.setValue("studentID", studentId);
-      console.log(student);
       setSelectedStudent(student);
       studentForm.trigger("studentID");
       const nextGradeLevel = getNextGradeLevel(student.grade_level);

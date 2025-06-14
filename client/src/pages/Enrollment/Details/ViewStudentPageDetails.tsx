@@ -205,14 +205,20 @@ export default function StudentDetailsPage() {
   };
 
   const handleOtherPayment = () => {
-    showLoading();
     setShowPaymentModal(false);
-    const params = new URLSearchParams({
-      enrollmentID: enrollment!.id,
-      schoolYear: enrollment!.school_year,
-      gradeLevel: enrollment!.grade_level,
-    });
-    navigate(`/other_payment?${params.toString()}`);
+    showLoading();
+    setTimeout(() => {
+      setEnrollmentInfo({
+        enrollment_id: enrollment?.id || "",
+        student_id: enrollment?.student.id || "",
+        school_year: enrollment?.school_year || "",
+        grade_level: enrollment?.grade_level || "",
+        total_tuition_amount_due: "",
+        total_tuition_paid: "",
+        tuition_balance: "",
+      });
+      navigate(`/other_payment`);
+    }, 0);
   };
 
   const mutation = useDeleteEnrollmentMutation(

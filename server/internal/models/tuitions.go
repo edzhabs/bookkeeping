@@ -88,16 +88,3 @@ type TuitionEnrollmentDetails struct {
 	TotalTuitionPaid      decimal.Decimal `json:"total_paid"`
 	TuitionBalance        decimal.Decimal `json:"balance"`
 }
-
-type TuitionPayment struct {
-	ID            uuid.UUID       `json:"id"`
-	EnrollmentID  uuid.UUID       `json:"enrollment_id"`
-	Amount        decimal.Decimal `json:"amount"`
-	PaymentMethod string          `json:"payment_method"`
-	PaymentDate   time.Time       `json:"payment_date"`
-	InvoiceNumber string          `json:"invoice_number"`
-	Notes         string          `json:"notes"`
-	CreatedAt     time.Time       `json:"created_at"`
-	UpdatedAt     time.Time       `json:"updated_at"`
-	DeletedAt     time.Time       `json:"deleted_at"`
-}

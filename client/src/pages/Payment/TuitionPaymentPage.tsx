@@ -44,6 +44,7 @@ import {
 import { formatToCurrency, getPaymentStatus } from "@/utils";
 import { useNavigate } from "react-router-dom";
 import { useTuitionPaymentMutation } from "@/hooks/useTuitionPaymentMutation";
+import CONSTANTS from "@/constants/constants";
 
 type FormData = z.infer<typeof TuitionPaymentSchema>;
 
@@ -58,9 +59,9 @@ export default function TuitionPaymentPage() {
   >(undefined);
   const [selectedEnrollment, setSelectedEnrollment] =
     useState<TuitionEnrollmentDetails>();
-  const [isPreloaded, setIsPreloaded] = useState(false);
   const [availableEnrollments, setAvailableEnrollments] =
     useState<TuitionEnrollmentDetails[]>();
+  const [isPreloaded, setIsPreloaded] = useState(false);
 
   const { data, isLoading } = useTuitionDropdownQuery();
   const tuitions = data?.data;
@@ -95,7 +96,7 @@ export default function TuitionPaymentPage() {
     }
   }, [showLoading, hideLoading, isLoading]);
 
-  // Check if student is preloaded from URL params
+  // Check if student is preloaded
   useEffect(() => {
     const enrollment_id = enrollmentInfo?.enrollment_id;
     const student_id = enrollmentInfo?.student_id;
@@ -213,12 +214,12 @@ export default function TuitionPaymentPage() {
               : "Select a student and enter payment details"}
           </CardDescription>
         </CardHeader>
-        {tuitionStatus === "Paid" && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+        {tuitionStatus === "paid" && (
+          <div className="mt-2 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="gap-2 text-center">
               <p className="text-green-800 font-medium">
-                This tuition has been fully paid. No additional payment is
+                <span className="text-green-500"> ⬤ </span>
+                {"  "}This tuition has been fully paid. No additional payment is
                 required.
               </p>
             </div>
@@ -429,9 +430,11 @@ export default function TuitionPaymentPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="cash">Cash</SelectItem>
-                            <SelectItem value="g-Cash">G-Cash</SelectItem>
-                            <SelectItem value="bank">Bank Transfer</SelectItem>
+                            {CONSTANTS.PAYMENTMETHODS.map((pm) => (
+                              <SelectItem key={pm.value} value={pm.value}>
+                                {pm.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -499,7 +502,7 @@ export default function TuitionPaymentPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Tuition Fee:</span>
                     <span className="text-xl font-bold">
-                      ₱{form.watch("amount").toLocaleString()}
+                      {formatToCurrency(form.watch("amount"))}
                     </span>
                   </div>
                 </div>

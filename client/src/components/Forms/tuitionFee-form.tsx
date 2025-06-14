@@ -63,6 +63,8 @@ const TuitionFeeForm = ({
   const [discounts, setDiscounts] = useState<string[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  const isPreGrade = !enrollmentData.grade_level.includes("grade");
+
   const feesForm = useForm<z.infer<typeof feesFormSchema>>({
     resolver: zodResolver(feesFormSchema),
     defaultValues: {
@@ -266,8 +268,6 @@ const TuitionFeeForm = ({
       pta_fee: values.pta_fee,
     };
 
-    console.log(updatedStudent);
-
     setEnrollmentData(updatedStudent);
     setActiveTab("tuition");
   };
@@ -341,19 +341,21 @@ const TuitionFeeForm = ({
               )}
             />
 
-            <FormField
-              control={feesForm.control}
-              name="lms_books_fee"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Quipper LMS and Books Fee</FormLabel>
-                  <FormControl>
-                    <Input type="number" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isPreGrade && (
+              <FormField
+                control={feesForm.control}
+                name="lms_books_fee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Quipper LMS and Books Fee</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
           <div className="space-y-6">
@@ -361,28 +363,32 @@ const TuitionFeeForm = ({
               <h3 className="text-lg font-medium">Discounts</h3>
 
               <div className="space-y-4">
-                <FormField
-                  control={feesForm.control}
-                  name="isRankOne"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel>Rank One in Class</FormLabel>
-                        <p className="text-sm text-muted-foreground">
-                          100% Free Quipper LMS and Books
-                        </p>
-                      </div>
-                    </FormItem>
-                  )}
-                />
+                {!isPreGrade && (
+                  <>
+                    <FormField
+                      control={feesForm.control}
+                      name="isRankOne"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel>Rank One in Class</FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              100% Free Quipper LMS and Books
+                            </p>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                    <Separator />
+                  </>
+                )}
 
-                <Separator />
                 <FormField
                   control={feesForm.control}
                   name="hasSiblingDiscount"

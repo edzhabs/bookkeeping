@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -84,6 +85,11 @@ func (app *application) createNewEnrollmentHandler(w http.ResponseWriter, r *htt
 		return
 	}
 
+	if strings.Contains(payload.GradeLevel, "grade") && payload.LmsFee.GreaterThan(decimal.Zero) {
+		app.badRequestResponse(w, r, fmt.Errorf("nursery and kindergarten cannot have quipper fee"))
+		return
+	}
+
 	// TODO: auth to add user log to know who created this
 	student := &models.Student{
 		FirstName:       payload.Student.FirstName,
@@ -146,6 +152,11 @@ func (app *application) createOldEnrollmentHandler(w http.ResponseWriter, r *htt
 
 	if err := utils.Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	if strings.Contains(payload.GradeLevel, "grade") && payload.LmsFee.GreaterThan(decimal.Zero) {
+		app.badRequestResponse(w, r, fmt.Errorf("nursery and kindergarten cannot have quipper fee"))
 		return
 	}
 

@@ -1,1 +1,2 @@
-DROP TABLE IF EXISTS other_payments;
+DROP TABLE IF EXISTS other_invoice_items;
+DROP TABLE IF EXISTS other_invoices;

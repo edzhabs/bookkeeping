@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, Calendar, Plus, Receipt, Trash2, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useFieldArray, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { ArrowLeft, Receipt, User, Plus, Trash2, Calendar } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -29,161 +29,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
-import type { Student } from "@/types/student";
+import { TuitionStudentCombobox } from "@/components/tuitionStudent-combo-box";
+import { useLoading } from "@/context/loading-prover";
+import useTuitionDropdownQuery from "@/hooks/useTuitionDropdownQuery";
+import useEnrollmentInfoStore from "@/stores/useEnrollmentInfoStore";
+import { TuitionDropdown, TuitionEnrollmentDetails } from "@/types/tuition";
+import CONSTANTS from "@/constants/constants";
+import OtherPaymentSchema from "@/lib/validation/OtherPaymentSchema";
+import { formatToCurrency } from "@/utils";
+import { OtherPaymentBody } from "@/types/payment";
+import { useOtherPaymentMutation } from "@/hooks/useOtherPaymentMutation";
 
-// Sample students data
-const sampleStudents: Student[] = [
-  {
-    id: "1",
-    firstName: "John",
-    middleName: "Robert",
-    lastName: "Doe",
-    suffix: "",
-    gender: "Male",
-    birthdate: "2010-05-15",
-    schoolYear: "2023-2024",
-    address: "123 Main St, Anytown, USA",
-    livingWith: "Both Parents",
-    contactNumbers: ["555-123-4567"],
-    status: "returning",
-    discount: "Sibling Discount",
-    discountPercentage: 5,
-    gradeLevel: "Grade 10",
-    parents: {
-      father: {
-        fullName: "Robert Doe",
-        job: "Engineer",
-        educationAttainment: "Bachelor's Degree",
-      },
-      mother: {
-        fullName: "Jane Doe",
-        job: "Doctor",
-        educationAttainment: "Doctorate",
-      },
-    },
-  },
-  {
-    id: "2",
-    firstName: "Emma",
-    middleName: "Grace",
-    lastName: "Smith",
-    suffix: "",
-    gender: "Female",
-    birthdate: "2011-08-22",
-    schoolYear: "2023-2024",
-    address: "456 Oak Ave, Somewhere, USA",
-    livingWith: "Mother",
-    contactNumbers: ["555-222-3333"],
-    status: "new",
-    discount: "None",
-    discountPercentage: 0,
-    gradeLevel: "Grade 8",
-    parents: {
-      mother: {
-        fullName: "Sarah Smith",
-        job: "Teacher",
-        educationAttainment: "Master's Degree",
-      },
-    },
-  },
-];
-
-// Sample enrollment data for different school years
-const sampleEnrollments = {
-  "1": [
-    { schoolYear: "2023-2024", gradeLevel: "Grade 10" },
-    { schoolYear: "2022-2023", gradeLevel: "Grade 9" },
-  ],
-  "2": [{ schoolYear: "2023-2024", gradeLevel: "Grade 8" }],
-};
-
-const paymentItemSchema = z
-  .object({
-    category: z.enum(
-      [
-        "PTA",
-        "Misc Fee",
-        "Books",
-        "P.E Shirt",
-        "P.E Pants",
-        "Car Pool",
-        "Others",
-      ],
-      {
-        required_error: "Please select a category.",
-      }
-    ),
-    amount: z.coerce
-      .number()
-      .min(1, { message: "Amount must be greater than 0." }),
-    remarks: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (
-        data.category === "Others" &&
-        (!data.remarks || data.remarks.trim() === "")
-      ) {
-        return false;
-      }
-      return true;
-    },
-    {
-      message: "Remarks are required when category is 'Others'.",
-      path: ["remarks"],
-    }
-  );
-
-const formSchema = z.object({
-  studentId: z.string().min(1, { message: "Please select a student." }),
-  schoolYear: z.string().min(1, { message: "Please select a school year." }),
-  gradeLevel: z.string().min(1, { message: "Please select a grade level." }),
-  items: z
-    .array(paymentItemSchema)
-    .min(1, { message: "At least one payment item is required." }),
-  paymentMethod: z.enum(["Cash", "G-Cash", "Bank"], {
-    required_error: "Please select a payment method.",
-  }),
-  orNumber: z.string().min(1, { message: "O.R number is required." }),
-  paymentDate: z.string().refine((date) => !isNaN(Date.parse(date)), {
-    message: "Please enter a valid date.",
-  }),
-  notes: z.string().optional(),
-});
-
-type FormData = z.infer<typeof formSchema>;
+type FormData = z.infer<typeof OtherPaymentSchema>;
 
 export default function OtherPaymentPage() {
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
-  const { toast } = useToast();
 
-  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [availableEnrollments, setAvailableEnrollments] = useState<
-    Array<{ schoolYear: string; gradeLevel: string }>
-  >([]);
+  const { enrollmentInfo, setEnrollmentInfo } = useEnrollmentInfoStore();
+
+  const [selectedStudent, setSelectedStudent] = useState<
+    TuitionDropdown | undefined
+  >(undefined);
+  const [availableEnrollments, setAvailableEnrollments] =
+    useState<TuitionEnrollmentDetails[]>();
+  const [selectedEnrollment, setSelectedEnrollment] =
+    useState<TuitionEnrollmentDetails>();
+
   const [isPreloaded, setIsPreloaded] = useState(false);
 
-  // Generate unique O.R number
-  const generateORNumber = () => {
-    const year = new Date().getFullYear();
-    const random = Math.floor(Math.random() * 900000) + 100000;
-    return `MISC-${year}-${random}`;
-  };
+  const { data, isLoading } = useTuitionDropdownQuery();
+  const tuitions = data?.data;
 
   const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(OtherPaymentSchema),
     defaultValues: {
-      studentId: "",
-      schoolYear: "",
-      gradeLevel: "",
-      items: [{ category: "PTA", amount: 0, remarks: "" }],
-      paymentMethod: "Cash",
-      orNumber: generateORNumber(),
-      paymentDate: new Date().toISOString().split("T")[0],
+      student_id: "",
+      school_year: "",
+      grade_level: "",
+      items: [{ category: undefined, amount: 0, remarks: "" }],
+      payment_method: undefined,
+      invoice_number: "",
+      payment_date: "",
       notes: "",
     },
   });
@@ -193,103 +83,100 @@ export default function OtherPaymentPage() {
     name: "items",
   });
 
-  // Check if student is preloaded from URL params
   useEffect(() => {
-    const studentId = searchParams.get("studentId");
-    const schoolYear = searchParams.get("schoolYear");
-    const gradeLevel = searchParams.get("gradeLevel");
-
-    if (studentId) {
-      const student = sampleStudents.find((s) => s.id === studentId);
-      if (student) {
-        setSelectedStudent(student);
-        setIsPreloaded(true);
-
-        // Set form values
-        form.setValue("studentId", student.id);
-        if (schoolYear) form.setValue("schoolYear", schoolYear);
-        if (gradeLevel) form.setValue("gradeLevel", gradeLevel);
-
-        // Load enrollments for this student
-        const enrollments =
-          sampleEnrollments[student.id as keyof typeof sampleEnrollments] || [];
-        setAvailableEnrollments(enrollments);
-      }
+    if (isLoading) {
+      showLoading();
+    } else {
+      hideLoading();
     }
-  }, [searchParams, form]);
+  }, [showLoading, hideLoading, isLoading]);
 
-  // Handle student selection
-  const handleStudentChange = (studentId: string) => {
-    const student = sampleStudents.find((s) => s.id === studentId);
+  // Check if student is preloaded
+  useEffect(() => {
+    const enrollment_id = enrollmentInfo?.enrollment_id;
+    const student_id = enrollmentInfo?.student_id;
+    const school_year = enrollmentInfo?.school_year;
+    const grade_level = enrollmentInfo?.grade_level;
+
+    if (enrollment_id) {
+      setIsPreloaded(true);
+
+      const student = tuitions?.find((t) => t.student_id === student_id);
+      const currentEnrollment = student?.tuition_details.find(
+        (td) => td.school_year === school_year
+      );
+
+      form.setValue("student_id", student_id || "");
+      setSelectedStudent(student);
+      setSelectedEnrollment(currentEnrollment);
+
+      if (school_year) form.setValue("school_year", school_year);
+      if (grade_level) form.setValue("grade_level", grade_level);
+    }
+  }, [enrollmentInfo, form, tuitions]);
+
+  const handleStudentChange = (student_id: string) => {
+    const student = tuitions?.find((s) => s.student_id === student_id);
     if (student) {
       setSelectedStudent(student);
-      form.setValue("studentId", studentId);
+      form.setValue("student_id", student_id);
 
-      // Load enrollments for this student
-      const enrollments =
-        sampleEnrollments[studentId as keyof typeof sampleEnrollments] || [];
-      setAvailableEnrollments(enrollments);
+      setAvailableEnrollments(student.tuition_details);
 
-      // Reset school year and grade level
-      form.setValue("schoolYear", "");
-      form.setValue("gradeLevel", "");
+      form.setValue("school_year", "");
+      form.setValue("grade_level", "");
     }
   };
 
-  // Handle school year change
-  const handleSchoolYearChange = (schoolYear: string) => {
-    form.setValue("schoolYear", schoolYear);
+  const handleSchoolYearChange = (school_year: string) => {
+    form.setValue("school_year", school_year);
 
-    // Find the grade level for this school year
-    const enrollment = availableEnrollments.find(
-      (e) => e.schoolYear === schoolYear
+    const currentEnrollment = availableEnrollments?.find(
+      (e) => e.school_year === school_year
     );
-    if (enrollment) {
-      form.setValue("gradeLevel", enrollment.gradeLevel);
+    setSelectedEnrollment(currentEnrollment);
+
+    if (currentEnrollment) {
+      form.setValue("grade_level", currentEnrollment.grade_level);
+    }
+  };
+
+  const handleBack = () => {
+    setEnrollmentInfo(null);
+    showLoading();
+    if (isPreloaded) {
+      navigate(`/enrollment/${enrollmentInfo?.enrollment_id}`);
+    } else {
+      navigate("/enrollment");
     }
   };
 
   // Calculate total amount
-  const totalAmount = form
-    .watch("items")
-    .reduce((sum, item) => sum + (item.amount || 0), 0);
+  const totalAmount = (form.watch("items") ?? []).reduce(
+    (sum, item) => Number(sum) + (Number(item.amount) || 0),
+    0
+  );
+
+  const mutate = useOtherPaymentMutation(totalAmount);
 
   const onSubmit = async (data: FormData) => {
-    showLoading("Processing other payment...");
+    if (!selectedEnrollment || !data) return;
+    const body: OtherPaymentBody = {
+      enrollment_id: selectedEnrollment.enrollment_id,
+      invoice_number: data.invoice_number,
+      payment_method: data.payment_method,
+      payment_date: data.payment_date,
+      notes: data.notes || "",
+      items: data.items,
+    };
 
-    try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      console.log("Other Payment Data:", data);
-
-      toast({
-        title: "Payment Recorded",
-        description: `Other payment of ₱${totalAmount.toLocaleString()} has been successfully recorded.`,
-      });
-
-      // Redirect back to student details or payments list
-      if (isPreloaded && selectedStudent) {
-        navigate(`/enrollment/${selectedStudent.id}`);
-      } else {
-        navigate("/payments");
-      }
-    } catch (error) {
-      console.error("Error processing payment:", error);
-      toast({
-        title: "Error",
-        description: "Failed to process payment. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      hideLoading();
-    }
+    mutate.mutate(body);
   };
 
   return (
-    <div className="container py-4 sm:py-8 max-w-4xl">
+    <div className="container py-4 sm:py-8">
       <div className="flex items-center gap-4 mb-6">
-        <Button variant="outline" size="icon" onClick={() => router.back()}>
+        <Button variant="outline" size="icon" onClick={() => handleBack}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -318,93 +205,28 @@ export default function OtherPaymentPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* Student Information Section */}
-              <div className="space-y-4">
+              <div className="mb-0 mt-3">
                 <div className="flex items-center gap-2 mb-4">
                   <User className="h-4 w-4 text-slate-500" />
                   <h3 className="text-lg font-medium">Student Information</h3>
                 </div>
 
-                <FormField
-                  control={form.control}
-                  name="studentId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Student</FormLabel>
-                      <FormControl>
-                        {isPreloaded ? (
-                          <Input
-                            value={
-                              selectedStudent
-                                ? `${selectedStudent.lastName}, ${
-                                    selectedStudent.firstName
-                                  } ${selectedStudent.middleName || ""}`
-                                : ""
-                            }
-                            disabled
-                            className="bg-slate-50"
-                          />
-                        ) : (
-                          <StudentCombobox
-                            students={sampleStudents}
-                            selectedValue={field.value}
-                            onValueChange={handleStudentChange}
-                            placeholder="Search and select a student..."
-                          />
-                        )}
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                {selectedStudent && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="col-span-2">
                     <FormField
                       control={form.control}
-                      name="schoolYear"
+                      name="student_id"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>School Year</FormLabel>
-                          <Select
-                            onValueChange={handleSchoolYearChange}
-                            value={field.value}
-                            disabled={isPreloaded}
-                          >
-                            <FormControl>
-                              <SelectTrigger
-                                className={isPreloaded ? "bg-slate-50" : ""}
-                              >
-                                <SelectValue placeholder="Select school year" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {availableEnrollments.map((enrollment) => (
-                                <SelectItem
-                                  key={enrollment.schoolYear}
-                                  value={enrollment.schoolYear}
-                                >
-                                  {enrollment.schoolYear}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="gradeLevel"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Grade Level</FormLabel>
+                          <FormLabel>Student</FormLabel>
                           <FormControl>
-                            <Input
-                              {...field}
-                              disabled
-                              className="bg-slate-50"
-                              placeholder="Grade level will auto-populate"
+                            <TuitionStudentCombobox
+                              isDisabled={isPreloaded}
+                              tuitions={tuitions}
+                              isLoading={isLoading}
+                              selectedValue={field.value}
+                              onValueChange={handleStudentChange}
+                              placeholder="Search and select a student..."
                             />
                           </FormControl>
                           <FormMessage />
@@ -412,9 +234,73 @@ export default function OtherPaymentPage() {
                       )}
                     />
                   </div>
-                )}
+                  {selectedStudent && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="school_year"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>School Year</FormLabel>
+                            {isPreloaded ? (
+                              <Input
+                                value={enrollmentInfo?.school_year}
+                                disabled
+                                className="bg-slate-50 font-medium text-blue-600"
+                              />
+                            ) : (
+                              <Select
+                                onValueChange={handleSchoolYearChange}
+                                value={field.value}
+                                disabled={isPreloaded}
+                              >
+                                <FormControl>
+                                  <SelectTrigger
+                                    className={`w-full ${
+                                      isPreloaded ? "bg-slate-50" : ""
+                                    }`}
+                                  >
+                                    <SelectValue placeholder="Select school year" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {availableEnrollments?.map((enrollment) => (
+                                    <SelectItem
+                                      key={enrollment.school_year}
+                                      value={enrollment.school_year}
+                                    >
+                                      {enrollment.school_year}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="grade_level"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Grade Level</FormLabel>
+                            <FormControl>
+                              <Input
+                                {...field}
+                                disabled
+                                className="bg-slate-50 capitalize font-bold text-blue-600"
+                                placeholder="auto display grade level"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+                </div>
               </div>
-
               <Separator />
 
               {/* Payment Items Section */}
@@ -429,7 +315,11 @@ export default function OtherPaymentPage() {
                     variant="outline"
                     size="sm"
                     onClick={() =>
-                      append({ category: "PTA", amount: 0, remarks: "" })
+                      append({
+                        category: undefined,
+                        amount: 0,
+                        remarks: "",
+                      })
                     }
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -467,26 +357,19 @@ export default function OtherPaymentPage() {
                                 value={field.value}
                               >
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select category" />
                                   </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                  <SelectItem value="PTA">PTA</SelectItem>
-                                  <SelectItem value="Misc Fee">
-                                    Misc Fee
-                                  </SelectItem>
-                                  <SelectItem value="Books">Books</SelectItem>
-                                  <SelectItem value="P.E Shirt">
-                                    P.E Shirt
-                                  </SelectItem>
-                                  <SelectItem value="P.E Pants">
-                                    P.E Pants
-                                  </SelectItem>
-                                  <SelectItem value="Car Pool">
-                                    Car Pool
-                                  </SelectItem>
-                                  <SelectItem value="Others">Others</SelectItem>
+                                  {CONSTANTS.CATEGORIES.map((category) => (
+                                    <SelectItem
+                                      key={category.value}
+                                      value={category.value}
+                                    >
+                                      {category.label}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                               <FormMessage />
@@ -513,7 +396,7 @@ export default function OtherPaymentPage() {
                         />
                       </div>
 
-                      {form.watch(`items.${index}.category`) === "Others" && (
+                      {form.watch(`items.${index}.category`) === "others" && (
                         <div className="mt-4">
                           <FormField
                             control={form.control}
@@ -521,7 +404,7 @@ export default function OtherPaymentPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>
-                                  Remarks (Required for Others)
+                                  Remarks* (Required for Others)
                                 </FormLabel>
                                 <FormControl>
                                   <Input
@@ -552,7 +435,7 @@ export default function OtherPaymentPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <FormField
                     control={form.control}
-                    name="paymentMethod"
+                    name="payment_method"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Payment Method</FormLabel>
@@ -561,14 +444,16 @@ export default function OtherPaymentPage() {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select payment method" />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Cash">Cash</SelectItem>
-                            <SelectItem value="G-Cash">G-Cash</SelectItem>
-                            <SelectItem value="Bank">Bank Transfer</SelectItem>
+                            {CONSTANTS.PAYMENTMETHODS.map((pm) => (
+                              <SelectItem key={pm.value} value={pm.value}>
+                                {pm.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -578,7 +463,7 @@ export default function OtherPaymentPage() {
 
                   <FormField
                     control={form.control}
-                    name="orNumber"
+                    name="invoice_number"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>O.R Number</FormLabel>
@@ -595,7 +480,7 @@ export default function OtherPaymentPage() {
 
                   <FormField
                     control={form.control}
-                    name="paymentDate"
+                    name="payment_date"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Payment Date</FormLabel>
@@ -641,13 +526,15 @@ export default function OtherPaymentPage() {
                             key={index}
                             className="flex justify-between text-sm"
                           >
-                            <span className="text-slate-600">
-                              {item.category === "Others"
+                            <span className="text-slate-600 capitalize">
+                              {item.category === "others"
                                 ? item.remarks
-                                : item.category}
+                                : CONSTANTS.CATEGORIES.find(
+                                    (c) => c.value === item.category
+                                  )?.label}
                               :
                             </span>
-                            <span>₱{item.amount.toLocaleString()}</span>
+                            <span>{formatToCurrency(item.amount)}</span>
                           </div>
                         )
                     )}
@@ -655,7 +542,7 @@ export default function OtherPaymentPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-medium">Total Amount:</span>
                       <span className="text-xl font-bold">
-                        ₱{totalAmount.toLocaleString()}
+                        {formatToCurrency(totalAmount)}
                       </span>
                     </div>
                   </div>
@@ -667,7 +554,7 @@ export default function OtherPaymentPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => router.back()}
+                  onClick={() => navigate(-1)}
                   className="sm:w-auto"
                 >
                   Cancel

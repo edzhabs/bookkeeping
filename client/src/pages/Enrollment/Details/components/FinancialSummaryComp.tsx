@@ -49,9 +49,9 @@ const FinancialSummaryComp = ({
             <p className="text-2xl font-bold text-blue-500">
               {formatToCurrency(enrollment.total_tuition_paid)}
             </p>
-            <p className="text-xs text-muted-foreground">
+            {/* <p className="text-xs text-muted-foreground">
               {1} payment(s) recorded
-            </p>
+            </p> */}
           </div>
           <div>
             <p className="text-sm font-medium">Remaining Balance</p>
@@ -82,14 +82,12 @@ const FinancialSummaryComp = ({
           </div>
         </div>
       </CardContent>
-      {Number(enrollment.tuition_balance) > 0 && (
-        <CardFooter className="mt-4">
-          <Button className="w-full cursor-pointer" onClick={handleMakePayment}>
-            <CreditCard className="mr-2 h-4 w-4" />
-            Make Payment
-          </Button>
-        </CardFooter>
-      )}
+      <CardFooter className="mt-4">
+        <Button className="w-full cursor-pointer" onClick={handleMakePayment}>
+          <CreditCard className="mr-2 h-4 w-4" />
+          Make Payment
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

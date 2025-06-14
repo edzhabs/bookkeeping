@@ -2,20 +2,20 @@ import { AlertDescription, AlertTitle } from "@/components/ui/alert";
 import CONSTANTS from "@/constants/constants";
 import { useLoading } from "@/context/loading-prover";
 import { logActivity } from "@/lib/activity-logger";
-import { payTuition } from "@/services/payments";
-import { TuitionPaymentBody } from "@/types/tuition";
+import { payOtherPayment } from "@/services/payments";
+import { OtherPaymentBody } from "@/types/payment";
 import { formatToCurrency } from "@/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-export function useTuitionPaymentMutation() {
+export function useOtherPaymentMutation(totalAmount: number) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
 
   return useMutation({
-    mutationFn: (body: TuitionPaymentBody) => payTuition(body),
+    mutationFn: (body: OtherPaymentBody) => payOtherPayment(body),
     onMutate: () => {
       showLoading("Processing tuition payment...");
     },
@@ -34,7 +34,7 @@ export function useTuitionPaymentMutation() {
         action: "Created",
         entityType: "Tuition",
         entityId: resp.enrollment_id || "",
-        details: `Created tuition payment ${resp.enrollment_id}`,
+        details: `Created other payment ${resp.enrollment_id}`,
       });
 
       navigate("/enrollment/" + resp.enrollment_id);
@@ -45,7 +45,7 @@ export function useTuitionPaymentMutation() {
             <AlertTitle className="text-green-600">Payment Recorded</AlertTitle>
           </div>
           <AlertDescription className="text-green-700 mt-1">
-            Tuition payment of {formatToCurrency(resp.amount)} has been
+            Other payment of {formatToCurrency(totalAmount)} has been
             successfully recorded.
           </AlertDescription>
         </>

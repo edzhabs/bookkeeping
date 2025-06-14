@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -16,86 +15,34 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CreditCard, GraduationCap, Plus, Receipt } from "lucide-react";
-import { Link } from "react-router-dom";
-
-const tuitionPayments = [
-  {
-    id: "tp1",
-    studentId: "1",
-    tuitionFeeAmount: 15000,
-    paymentMethod: "Bank",
-    invoiceNumber: "TUI-2023-001",
-    paymentDate: "2023-07-10",
-    notes: "First semester payment",
-    createdAt: "2023-07-10T10:00:00Z",
-    updatedAt: "2023-07-10T10:00:00Z",
-  },
-  {
-    id: "tp2",
-    studentId: "1",
-    tuitionFeeAmount: 10000,
-    paymentMethod: "Cash",
-    invoiceNumber: "TUI-2023-015",
-    paymentDate: "2023-11-05",
-    notes: "Second installment",
-    createdAt: "2023-11-05T14:00:00Z",
-    updatedAt: "2023-11-05T14:00:00Z",
-  },
-];
-
-const otherPayments = [
-  {
-    id: "op1",
-    studentId: "1",
-    items: [
-      { category: "Books", amount: 3500 },
-      { category: "PTA", amount: 1000 },
-    ],
-    totalAmount: 4500,
-    paymentMethod: "G-Cash",
-    invoiceNumber: "MISC-2023-001",
-    paymentDate: "2023-08-15",
-    notes: "Books and PTA fee",
-    createdAt: "2023-08-15T09:00:00Z",
-    updatedAt: "2023-08-15T09:00:00Z",
-  },
-  {
-    id: "op2",
-    studentId: "1",
-    items: [
-      { category: "P.E Shirt", amount: 800 },
-      { category: "P.E Pants", amount: 1200 },
-    ],
-    totalAmount: 2000,
-    paymentMethod: "Cash",
-    invoiceNumber: "MISC-2023-008",
-    paymentDate: "2023-09-20",
-    notes: "P.E uniform",
-    createdAt: "2023-09-20T11:00:00Z",
-    updatedAt: "2023-09-20T11:00:00Z",
-  },
-  {
-    id: "op3",
-    studentId: "1",
-    items: [{ category: "Carpool", amount: 2000 }],
-    totalAmount: 2000,
-    paymentMethod: "Bank",
-    invoiceNumber: "MISC-2023-012",
-    paymentDate: "2023-10-01",
-    notes: "Monthly carpool fee",
-    createdAt: "2023-10-01T08:00:00Z",
-    updatedAt: "2023-10-01T08:00:00Z",
-  },
-];
+import {
+  useOtherPaymentsByIdQuery,
+  useTuitionPaymentsByIdQuery,
+} from "@/hooks/usePaymentsByIdQuery";
+import { IPaymentsID } from "@/types/payment";
+import { formatCategory, formatToCurrency } from "@/utils";
+import { CreditCard, GraduationCap, Receipt } from "lucide-react";
 
 interface Props {
   enrollmentID: string | undefined;
 }
 
 const PaymentRecordsComp = ({ enrollmentID }: Props) => {
-  const totalPaid = 34000;
-  const totalOtherPayments = 8000;
+  const tuitionPaymentsQuery = useTuitionPaymentsByIdQuery(enrollmentID);
+  const otherPaymentsQuery = useOtherPaymentsByIdQuery(enrollmentID);
+  const tuitionPayments = tuitionPaymentsQuery.data?.data;
+  const otherPayments = otherPaymentsQuery.data?.data;
+
+  const totalPayments = (data: IPaymentsID[] | undefined) => {
+    if (!data) return;
+    const res = data.reduce((total, item) => {
+      return total + parseFloat(item.amount);
+    }, 0);
+    return res;
+  };
+
+  const totalPaid = totalPayments(tuitionPayments) || 0;
+  const totalOtherPayments = totalPayments(otherPayments) || 0;
 
   return (
     <TabsContent value="payments" className="space-y-4 pt-4">
@@ -123,7 +70,7 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                       Total Payments
                     </p>
                     <p className="text-2xl font-bold text-blue-900">
-                      ₱{(totalPaid + totalOtherPayments).toLocaleString()}
+                      {formatToCurrency(totalPaid + totalOtherPayments)}
                     </p>
                   </div>
                   <Receipt className="h-8 w-8 text-blue-600" />
@@ -138,7 +85,7 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                       Tuition Payments
                     </p>
                     <p className="text-2xl font-bold text-emerald-900">
-                      ₱{totalPaid.toLocaleString()}
+                      {formatToCurrency(totalPaid)}
                     </p>
                   </div>
                   <GraduationCap className="h-8 w-8 text-emerald-600" />
@@ -153,7 +100,7 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                       Other Payments
                     </p>
                     <p className="text-2xl font-bold text-purple-900">
-                      ₱{totalOtherPayments.toLocaleString()}
+                      {formatToCurrency(totalOtherPayments)}
                     </p>
                   </div>
                   <CreditCard className="h-8 w-8 text-purple-600" />
@@ -166,10 +113,10 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
           <Tabs defaultValue="tuition-payments" className="w-full px-6">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="tuition-payments">
-                Tuition Payments (0)
+                Tuition Payments ({tuitionPayments?.length || 0})
               </TabsTrigger>
               <TabsTrigger value="other-payments">
-                Other Payments (0)
+                Other Payments ({otherPayments?.length || 0})
               </TabsTrigger>
             </TabsList>
 
@@ -177,24 +124,16 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base font-medium">
-                    Tuition Payment History
+                    Payments History
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 px-4">
-                  {tuitionPayments.length === 0 ? (
+                  {!tuitionPayments || tuitionPayments?.length === 0 ? (
                     <div className="text-center py-8 px-6">
                       <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground mb-4">
                         No tuition payments recorded yet.
                       </p>
-                      <Link
-                        to={`/payments/tuition/new?enrollmentID=${enrollmentID}`}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Record First Payment
-                        </Button>
-                      </Link>
                     </div>
                   ) : (
                     <div className="max-h-80 overflow-y-auto">
@@ -214,42 +153,35 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                             <TableHead className="font-medium hidden md:table-cell">
                               Notes
                             </TableHead>
-                            <TableHead className="text-right font-medium">
-                              Actions
-                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {tuitionPayments.map((payment) => (
+                          {tuitionPayments?.map((payment) => (
                             <TableRow
                               key={payment.id}
                               className="hover:bg-slate-50"
                             >
                               <TableCell className="font-medium">
-                                {payment.invoiceNumber}
+                                {payment.invoice_number}
                               </TableCell>
                               <TableCell>
                                 {new Date(
-                                  payment.paymentDate
+                                  payment.payment_date
                                 ).toLocaleDateString()}
                               </TableCell>
                               <TableCell className="font-medium">
-                                ₱{payment.tuitionFeeAmount.toLocaleString()}
+                                {formatToCurrency(payment.amount)}
                               </TableCell>
                               <TableCell className="hidden sm:table-cell">
-                                <Badge variant="outline" className="text-xs">
-                                  {payment.paymentMethod}
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs capitalize"
+                                >
+                                  {payment.payment_method}
                                 </Badge>
                               </TableCell>
                               <TableCell className="hidden md:table-cell text-muted-foreground max-w-xs truncate">
                                 {payment.notes || "-"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Link to={`/payments/tuition/${payment.id}`}>
-                                  <Button variant="ghost" size="sm">
-                                    View
-                                  </Button>
-                                </Link>
                               </TableCell>
                             </TableRow>
                           ))}
@@ -269,20 +201,12 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-0 px-4">
-                  {otherPayments.length === 0 ? (
+                  {!otherPayments || otherPayments?.length === 0 ? (
                     <div className="text-center py-8 px-6">
                       <Receipt className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                       <p className="text-muted-foreground mb-4">
                         No other payments recorded yet.
                       </p>
-                      <Link
-                        to={`/payments/other/new?enrollmentID=${enrollmentID}`}
-                      >
-                        <Button variant="outline" size="sm">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Record First Payment
-                        </Button>
-                      </Link>
                     </div>
                   ) : (
                     <div className="max-h-80 overflow-y-auto">
@@ -302,28 +226,28 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                             <TableHead className="font-medium hidden sm:table-cell">
                               Method
                             </TableHead>
-                            <TableHead className="text-right font-medium">
-                              Actions
+                            <TableHead className="font-medium hidden md:table-cell">
+                              Notes
                             </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {otherPayments.map((payment) => (
+                          {otherPayments?.map((payment) => (
                             <TableRow
                               key={payment.id}
                               className="hover:bg-slate-50"
                             >
                               <TableCell className="font-medium">
-                                {payment.invoiceNumber}
+                                {payment.invoice_number}
                               </TableCell>
                               <TableCell>
                                 {new Date(
-                                  payment.paymentDate
+                                  payment.payment_date
                                 ).toLocaleDateString()}
                               </TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
-                                  {payment.items
+                                  {payment.category
                                     .slice(0, 2)
                                     .map((item, idx) => (
                                       <Badge
@@ -331,33 +255,32 @@ const PaymentRecordsComp = ({ enrollmentID }: Props) => {
                                         variant="secondary"
                                         className="text-xs"
                                       >
-                                        {item.category}
+                                        {formatCategory(item)}
                                       </Badge>
                                     ))}
-                                  {payment.items.length > 2 && (
+                                  {payment.category.length > 2 && (
                                     <Badge
                                       variant="outline"
                                       className="text-xs"
                                     >
-                                      +{payment.items.length - 2} more
+                                      +{payment.category.length - 2} more
                                     </Badge>
                                   )}
                                 </div>
                               </TableCell>
                               <TableCell className="font-medium">
-                                ₱{payment.totalAmount.toLocaleString()}
+                                {formatToCurrency(payment.amount)}
                               </TableCell>
                               <TableCell className="hidden sm:table-cell">
-                                <Badge variant="outline" className="text-xs">
-                                  {payment.paymentMethod}
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs capitalize"
+                                >
+                                  {payment.payment_method}
                                 </Badge>
                               </TableCell>
-                              <TableCell className="text-right">
-                                <Link to={`/payments/other/${payment.id}`}>
-                                  <Button variant="ghost" size="sm">
-                                    View
-                                  </Button>
-                                </Link>
+                              <TableCell className="hidden md:table-cell text-muted-foreground max-w-xs truncate">
+                                {payment.notes || "-"}
                               </TableCell>
                             </TableRow>
                           ))}
