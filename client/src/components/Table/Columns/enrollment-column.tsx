@@ -108,6 +108,19 @@ export const EnrollmentColumns = (
         ]}
       />
     ),
+    cell: ({ getValue }) =>
+      getValue<string>()
+        .split(",")
+        .map((item) => item.trim())
+        .map((item, idx) => (
+          <Badge
+            key={idx}
+            variant="secondary"
+            className="hover:bg-slate-200 cursor-default text-xs"
+          >
+            {item}
+          </Badge>
+        )),
     filterFn: (row, id, value) => {
       // Map raw discount types to display values
       const mappedDiscounts = row.getValue<string[]>(id);

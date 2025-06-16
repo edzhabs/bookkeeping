@@ -77,11 +77,13 @@ const CONSTANTS = {
     STUDENTS: "students",
     TUITIONS: "tuitions",
     TUITIONDROPDOWN: "tuitions_dropdown",
+    TRANSACTIONS: "transactions",
     OTHERS: "others",
     PAYMENTS: "payments",
   },
   STORAGEKEY: {
     ENROLLMENTABLE: "enrollmentTable",
+    TRANSACTIONTABLE: "transactionTable",
   },
 };
 

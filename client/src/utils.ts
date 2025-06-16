@@ -84,7 +84,7 @@ export const formatFullName = (student: IStudentFullName) => {
 };
 
 export const getPaymentStatus = (total_amount: string, total_paid: string) => {
-  if (Number(total_amount) >= Number(total_paid)) {
+  if (Number(total_amount) <= Number(total_paid)) {
     return "paid";
   } else if (Number(total_paid) <= 0) {
     return "unpaid";
@@ -93,9 +93,21 @@ export const getPaymentStatus = (total_amount: string, total_paid: string) => {
   }
 };
 
+export const displayCategories = (categories: string[]) => {
+  if (categories.length <= 0) return;
+  const labels: string[] = [];
+  categories.map((category) => {
+    labels.push(formatCategory(category));
+  });
+
+  return labels.join(", ");
+};
+
 export const formatCategory = (text: string) => {
   if (text === "lms_fee") {
     return "Quipper/Books ";
+  } else if (text === "id") {
+    return "School ID";
   } else {
     return text
       .split("_") // Split by underscore

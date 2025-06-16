@@ -25,7 +25,9 @@ export function DataTableColumnFilter<TData, TValue>({
   options,
   className,
 }: DataTableColumnFilterProps<TData, TValue>) {
-  const [selected, setSelected] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string[]>(
+    (column.getFilterValue() as []) || []
+  );
 
   const toggleOption = (option: string) => {
     const newSelected = selected.includes(option)

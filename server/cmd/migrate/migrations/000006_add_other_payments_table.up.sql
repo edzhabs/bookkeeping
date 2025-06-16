@@ -1,13 +1,14 @@
 CREATE TABLE IF NOT EXISTS other_invoices (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     enrollment_id UUID NOT NULL REFERENCES enrollments(id),
-    invoice_number VARCHAR(100) UNIQUE NOT NULL,
+    invoice_number VARCHAR(100) NOT NULL,
     payment_date DATE NOT NULL,
     payment_method VARCHAR(10) NOT NULL CHECK (payment_method IN ('cash', 'g-cash', 'bank')),
     notes TEXT,
     created_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ(0) NOT NULL DEFAULT now(),
-    deleted_at TIMESTAMPTZ(0) DEFAULT NULL
+    deleted_at TIMESTAMPTZ(0) DEFAULT NULL,
+    UNIQUE(invoice_number, deleted_at)
 );
 
 CREATE TABLE IF NOT EXISTS other_invoice_items (

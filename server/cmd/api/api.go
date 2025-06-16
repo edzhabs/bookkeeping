@@ -108,6 +108,11 @@ func (app *application) mount() http.Handler {
 				r.Get("/other_payments", app.getOtherPaymentsHandler)
 			})
 		})
+
+		r.Route("/transactions", func(r chi.Router) {
+			r.Get("/", app.getTransactionsHandler)
+
+		})
 	})
 
 	return r
